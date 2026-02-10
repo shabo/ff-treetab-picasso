@@ -14,7 +14,7 @@
       }
     }
   },
-  "permissions": ["menus", "tabs"],
+  "permissions": ["menus", "tabs", "storage"],
   "icons": {
     "48": "icons/icon.svg",
     "96": "icons/icon.svg"

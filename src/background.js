@@ -9,6 +9,11 @@ const MENU_CLEAR_COLOR_ID = 'tabs-color-clear-color';
 const MENU_CLEAR_BOTH_ID = 'tabs-color-clear-both';
 const MENU_COLORS_ID = 'tabs-color-colors';
 const MENU_EMOJIS_ID = 'tabs-color-emojis';
+const MENU_EMOJI_RECENT_ID = 'tabs-color-emoji-recent';
+const MENU_EMOJI_FREQUENT_ID = 'tabs-color-emoji-frequent';
+const MENU_EMOJI_RECENT_SLOT_PREFIX = 'tabs-color-emoji-recent-slot-';
+const MENU_EMOJI_FREQUENT_SLOT_PREFIX = 'tabs-color-emoji-frequent-slot-';
+const MENU_EMOJI_CATEGORY_PREFIX = 'tabs-color-emoji-category-';
 const MENU_COLOR_PREFIX = 'tabs-color-color-';
 const MENU_SHADE_PREFIX = 'tabs-color-shade-'; // legacy (v0.1.0)
 const MENU_EMOJI_MENU_PREFIX = 'tabs-color-emoji-menu-';
@@ -27,6 +32,47 @@ const EMOJIS = [
   '🥳', '🥺', '😢', '😤', '👏',
   '💪', '🤝', '✅', '⭐', '💯',
   '🚀', '🙃', '😉', '🫶', '🤓'
+];
+
+const EMOJI_RECENT_SLOTS = 12;
+const EMOJI_FREQUENT_SLOTS = 12;
+const STORAGE_EMOJI_USAGE_KEY = 'tabs-color-emoji-usage-v1';
+
+// iPhone-ish grouping, but limited to the emojis we ship in EMOJIS.
+const EMOJI_CATEGORIES = [
+  {
+    id: 'smileys_people',
+    title: 'Smileys & People',
+    emojis: [
+      '😂', '😍', '🤣', '😊', '😭',
+      '😘', '😅', '😁', '😎', '😆',
+      '🤔', '👀', '😋', '😜', '😇',
+      '😴', '😌', '😔', '😒', '😏',
+      '😩', '😡', '🤬', '😱', '😳',
+      '🤗', '🤩', '🥳', '🥺', '😢',
+      '😤', '🙃', '😉', '🤓'
+    ]
+  },
+  {
+    id: 'gestures_body',
+    title: 'Gestures & Body',
+    emojis: ['🙏', '👍', '🙌', '👏', '💪', '🤝', '🫶']
+  },
+  {
+    id: 'activity',
+    title: 'Activity',
+    emojis: ['🎉']
+  },
+  {
+    id: 'travel_places',
+    title: 'Travel & Places',
+    emojis: ['🚀']
+  },
+  {
+    id: 'symbols',
+    title: 'Symbols',
+    emojis: ['❤️', '💕', '✨', '🔥', '✅', '⭐', '💯']
+  }
 ];
 
 // 20-color palette (hand-picked, works well as tab backgrounds).
@@ -55,6 +101,8 @@ const PALETTE = [
 ];
 
 let gRegisteredToTST = false;
+let gRecentSlotEmojiIndices = Array(EMOJI_RECENT_SLOTS).fill(null);
+let gFrequentSlotEmojiIndices = Array(EMOJI_FREQUENT_SLOTS).fill(null);
 
 function clampByte(n) {
   return Math.max(0, Math.min(255, n | 0));
@@ -74,6 +122,116 @@ function emojiState(i) {
 
 function emojiMenuId(i) {
   return `${MENU_EMOJI_MENU_PREFIX}${String(i).padStart(2, '0')}`;
+}
+
+function emojiCategoryId(categoryId) {
+  return `${MENU_EMOJI_CATEGORY_PREFIX}${categoryId}`;
+}
+
+function recentSlotId(i) {
+  return `${MENU_EMOJI_RECENT_SLOT_PREFIX}${String(i).padStart(2, '0')}`;
+}
+
+function frequentSlotId(i) {
+  return `${MENU_EMOJI_FREQUENT_SLOT_PREFIX}${String(i).padStart(2, '0')}`;
+}
+
+function emojiIndexByValue(emoji) {
+  return EMOJIS.indexOf(emoji);
+}
+
+function normalizeEmojiCategories() {
+  const out = [];
+  const seen = new Set();
+
+  for (const cat of EMOJI_CATEGORIES) {
+    const indices = [];
+    for (const e of cat.emojis) {
+      const idx = emojiIndexByValue(e);
+      if (idx < 0) continue;
+      if (seen.has(idx)) continue;
+      seen.add(idx);
+      indices.push(idx);
+    }
+    if (indices.length === 0) continue;
+    out.push({ id: cat.id, title: cat.title, indices });
+  }
+
+  if (seen.size !== EMOJIS.length) {
+    const missing = [];
+    for (let i = 0; i < EMOJIS.length; i++) if (!seen.has(i)) missing.push(i);
+    out.push({ id: 'other', title: 'Other', indices: missing });
+  }
+
+  return out;
+}
+
+const EMOJI_CATEGORIES_NORMALIZED = normalizeEmojiCategories();
+
+async function loadEmojiUsage() {
+  const obj = await browser.storage.local.get(STORAGE_EMOJI_USAGE_KEY);
+  const v = obj?.[STORAGE_EMOJI_USAGE_KEY];
+  const recent = Array.isArray(v?.recent) ? v.recent : [];
+  const counts = (v?.counts && typeof v.counts === 'object') ? v.counts : {};
+  const lastUsed = (v?.lastUsed && typeof v.lastUsed === 'object') ? v.lastUsed : {};
+
+  const cleanRecent = [];
+  for (const x of recent) {
+    const n = Number(x);
+    if (!Number.isFinite(n) || n < 0 || n >= EMOJIS.length) continue;
+    if (cleanRecent.includes(n)) continue;
+    cleanRecent.push(n);
+    if (cleanRecent.length >= 30) break;
+  }
+
+  const cleanCounts = {};
+  const cleanLastUsed = {};
+  for (let i = 0; i < EMOJIS.length; i++) {
+    const k = String(i);
+    const c = Number(counts[k] ?? 0);
+    const t = Number(lastUsed[k] ?? 0);
+    if (Number.isFinite(c) && c > 0) cleanCounts[k] = Math.floor(c);
+    if (Number.isFinite(t) && t > 0) cleanLastUsed[k] = Math.floor(t);
+  }
+
+  return { recent: cleanRecent, counts: cleanCounts, lastUsed: cleanLastUsed };
+}
+
+async function saveEmojiUsage(usage) {
+  await browser.storage.local.set({ [STORAGE_EMOJI_USAGE_KEY]: usage });
+}
+
+function computeFrequentEmojiIndices(usage, limit) {
+  const items = [];
+  for (const k of Object.keys(usage.counts || {})) {
+    const idx = Number.parseInt(k, 10);
+    if (!Number.isFinite(idx) || idx < 0 || idx >= EMOJIS.length) continue;
+    const count = Number(usage.counts[k] ?? 0);
+    if (!Number.isFinite(count) || count <= 0) continue;
+    const last = Number(usage.lastUsed?.[k] ?? 0);
+    items.push({ idx, count, last });
+  }
+
+  items.sort((a, b) => {
+    if (b.count !== a.count) return b.count - a.count;
+    if (b.last !== a.last) return b.last - a.last;
+    return a.idx - b.idx;
+  });
+
+  return items.slice(0, limit).map((x) => x.idx);
+}
+
+async function recordEmojiUse(emojiIndex) {
+  const usage = await loadEmojiUsage();
+
+  const now = Date.now();
+  const k = String(emojiIndex);
+  usage.counts[k] = (usage.counts[k] || 0) + 1;
+  usage.lastUsed[k] = now;
+  usage.recent = [emojiIndex].concat(usage.recent.filter((x) => x !== emojiIndex)).slice(0, 30);
+
+  await saveEmojiUsage(usage);
+  return usage;
 }
 
 function allColorStates() {
@@ -298,6 +456,35 @@ async function applyEmojiToTab(tab, emojiIndexOrNull) {
   }
 }
 
+async function updateEmojiUsageMenus(usageOrNull) {
+  const usage = usageOrNull || await loadEmojiUsage();
+  const recent = (usage.recent || []).slice(0, EMOJI_RECENT_SLOTS);
+  const frequent = computeFrequentEmojiIndices(usage, EMOJI_FREQUENT_SLOTS);
+
+  gRecentSlotEmojiIndices = Array(EMOJI_RECENT_SLOTS).fill(null);
+  gFrequentSlotEmojiIndices = Array(EMOJI_FREQUENT_SLOTS).fill(null);
+
+  for (let i = 0; i < EMOJI_RECENT_SLOTS; i++) {
+    const idx = recent[i];
+    gRecentSlotEmojiIndices[i] = (typeof idx === 'number') ? idx : null;
+    const title = (typeof idx === 'number') ? EMOJIS[idx] : '...';
+    const enabled = (typeof idx === 'number');
+    try {
+      await browser.menus.update(recentSlotId(i), { title, enabled });
+    } catch (_e) {}
+  }
+
+  for (let i = 0; i < EMOJI_FREQUENT_SLOTS; i++) {
+    const idx = frequent[i];
+    gFrequentSlotEmojiIndices[i] = (typeof idx === 'number') ? idx : null;
+    const title = (typeof idx === 'number') ? EMOJIS[idx] : '...';
+    const enabled = (typeof idx === 'number');
+    try {
+      await browser.menus.update(frequentSlotId(i), { title, enabled });
+    } catch (_e) {}
+  }
+}
+
 async function ensureMenus() {
   await browser.menus.removeAll();
 
@@ -362,13 +549,64 @@ async function ensureMenus() {
     contexts: ['tab']
   });
 
-  for (let i = 0; i < EMOJIS.length; i++) {
+  browser.menus.create({
+    id: MENU_EMOJI_RECENT_ID,
+    parentId: MENU_EMOJIS_ID,
+    title: 'Recent',
+    contexts: ['tab']
+  });
+
+  for (let i = 0; i < EMOJI_RECENT_SLOTS; i++) {
     browser.menus.create({
-      id: emojiMenuId(i),
-      parentId: MENU_EMOJIS_ID,
-      title: EMOJIS[i],
+      id: recentSlotId(i),
+      parentId: MENU_EMOJI_RECENT_ID,
+      title: '...',
+      enabled: false,
       contexts: ['tab']
     });
+  }
+
+  browser.menus.create({
+    id: MENU_EMOJI_FREQUENT_ID,
+    parentId: MENU_EMOJIS_ID,
+    title: 'Frequently used',
+    contexts: ['tab']
+  });
+
+  for (let i = 0; i < EMOJI_FREQUENT_SLOTS; i++) {
+    browser.menus.create({
+      id: frequentSlotId(i),
+      parentId: MENU_EMOJI_FREQUENT_ID,
+      title: '...',
+      enabled: false,
+      contexts: ['tab']
+    });
+  }
+
+  browser.menus.create({
+    id: 'tabs-color-sep-emoji-1',
+    parentId: MENU_EMOJIS_ID,
+    type: 'separator',
+    contexts: ['tab']
+  });
+
+  for (const cat of EMOJI_CATEGORIES_NORMALIZED) {
+    const catId = emojiCategoryId(cat.id);
+    browser.menus.create({
+      id: catId,
+      parentId: MENU_EMOJIS_ID,
+      title: cat.title,
+      contexts: ['tab']
+    });
+
+    for (const idx of cat.indices) {
+      browser.menus.create({
+        id: emojiMenuId(idx),
+        parentId: catId,
+        title: EMOJIS[idx],
+        contexts: ['tab']
+      });
+    }
   }
 }
 
@@ -391,12 +629,39 @@ browser.menus.onClicked.addListener(async (info, tab) => {
     }
 
     if (typeof info.menuItemId !== 'string') return;
+
+    if (info.menuItemId.startsWith(MENU_EMOJI_RECENT_SLOT_PREFIX)) {
+      const slotStr = info.menuItemId.slice(MENU_EMOJI_RECENT_SLOT_PREFIX.length);
+      const slot = Number.parseInt(slotStr, 10);
+      if (!Number.isFinite(slot) || slot < 0 || slot >= EMOJI_RECENT_SLOTS) return;
+      const idx = gRecentSlotEmojiIndices[slot];
+      if (typeof idx !== 'number') return;
+      await applyEmojiToTab(tab, idx);
+      const usage = await recordEmojiUse(idx);
+      await updateEmojiUsageMenus(usage);
+      return;
+    }
+
+    if (info.menuItemId.startsWith(MENU_EMOJI_FREQUENT_SLOT_PREFIX)) {
+      const slotStr = info.menuItemId.slice(MENU_EMOJI_FREQUENT_SLOT_PREFIX.length);
+      const slot = Number.parseInt(slotStr, 10);
+      if (!Number.isFinite(slot) || slot < 0 || slot >= EMOJI_FREQUENT_SLOTS) return;
+      const idx = gFrequentSlotEmojiIndices[slot];
+      if (typeof idx !== 'number') return;
+      await applyEmojiToTab(tab, idx);
+      const usage = await recordEmojiUse(idx);
+      await updateEmojiUsageMenus(usage);
+      return;
+    }
+
     if (info.menuItemId.startsWith(MENU_EMOJI_MENU_PREFIX)) {
       const idxStr = info.menuItemId.slice(MENU_EMOJI_MENU_PREFIX.length);
       const idx = Number.parseInt(idxStr, 10);
       if (!Number.isFinite(idx) || idx < 0 || idx >= EMOJIS.length) return;
       // Emoji must apply only to the clicked tab (not its descendants).
       await applyEmojiToTab(tab, idx);
+      const usage = await recordEmojiUse(idx);
+      await updateEmojiUsageMenus(usage);
       return;
     }
 
@@ -413,11 +678,13 @@ browser.menus.onClicked.addListener(async (info, tab) => {
 
 browser.runtime.onInstalled.addListener(async () => {
   await ensureMenus();
+  await updateEmojiUsageMenus(null);
   await tryRegisterToTST();
 });
 
 browser.runtime.onStartup.addListener(async () => {
   await ensureMenus();
+  await updateEmojiUsageMenus(null);
   await tryRegisterToTST();
 });
 
@@ -429,5 +696,8 @@ browser.runtime.onMessageExternal.addListener(async (message, sender) => {
 });
 
 // Best-effort initialization on first load (useful during temporary addon reloads).
-ensureMenus().catch(() => {});
-tryRegisterToTST().catch(() => {});
+(async () => {
+  await ensureMenus();
+  await updateEmojiUsageMenus(null);
+  await tryRegisterToTST();
+})().catch(() => {});
