@@ -1,0 +1,13 @@
+{
+  "name": "tst-color-tab-tree",
+  "private": true,
+  "version": "0.1.0",
+  "devDependencies": {
+    "web-ext": "^8.7.0"
+  },
+  "scripts": {
+    "start": "NO_UPDATE_NOTIFIER=1 web-ext run -s src",
+    "build": "NO_UPDATE_NOTIFIER=1 web-ext build -s src -a dist --overwrite-dest",
+    "lint": "node -c src/background.js"
+  }
+}

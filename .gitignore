@@ -1,0 +1,5 @@
+dist/
+node_modules/
+.npm-cache/
+.web-ext.pid
+.web-ext.log
