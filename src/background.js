@@ -105,14 +105,6 @@ let gRegisteredToTST = false;
 let gRecentSlotEmojiIndices = Array(EMOJI_RECENT_SLOTS).fill(null);
 let gFrequentSlotEmojiIndices = Array(EMOJI_FREQUENT_SLOTS).fill(null);
 
-function clampByte(n) {
-  return Math.max(0, Math.min(255, n | 0));
-}
-
-function byteToHex(n) {
-  return clampByte(n).toString(16).padStart(2, '0').toUpperCase();
-}
-
 function colorState(i) {
   return `${MENU_COLOR_PREFIX}${String(i).padStart(2, '0')}`;
 }
