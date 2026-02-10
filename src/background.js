@@ -9,6 +9,7 @@ const MENU_CLEAR_COLOR_ID = 'tabs-color-clear-color';
 const MENU_CLEAR_BOTH_ID = 'tabs-color-clear-both';
 const MENU_COLORS_ID = 'tabs-color-colors';
 const MENU_EMOJIS_ID = 'tabs-color-emojis';
+const MENU_CLEAR_EVERYTHING_ID = 'tabs-color-clear-everything';
 const MENU_EMOJI_RECENT_ID = 'tabs-color-emoji-recent';
 const MENU_EMOJI_FREQUENT_ID = 'tabs-color-emoji-frequent';
 const MENU_EMOJI_RECENT_SLOT_PREFIX = 'tabs-color-emoji-recent-slot-';
@@ -456,6 +457,37 @@ async function applyEmojiToTab(tab, emojiIndexOrNull) {
   }
 }
 
+async function clearEverythingAllTabs() {
+  // Clear all addon-applied states across all tabs (colors + emojis) in TST sidebar.
+  // Also reset emoji usage history to empty.
+  let tabs;
+  try {
+    tabs = await browser.tabs.query({});
+  } catch (_e) {
+    return;
+  }
+
+  const tabIds = [];
+  for (const t of tabs) if (t && typeof t.id === 'number') tabIds.push(t.id);
+  if (tabIds.length === 0) return;
+
+  const states = allColorStates().concat(allLegacyShadeStates()).concat(allEmojiStates());
+  try {
+    await browser.runtime.sendMessage(TST_ID, {
+      type: 'remove-tab-state',
+      tabs: tabIds,
+      state: states
+    });
+  } catch (e) {
+    console.error('[tst-color-tab-tree] Failed to clear states via TST API.', { registeredToTST: gRegisteredToTST, tabCount: tabIds.length }, e);
+  }
+
+  try {
+    await browser.storage.local.remove(STORAGE_EMOJI_USAGE_KEY);
+  } catch (_e) {}
+  await updateEmojiUsageMenus(null);
+}
+
 async function updateEmojiUsageMenus(usageOrNull) {
   const usage = usageOrNull || await loadEmojiUsage();
   const recent = (usage.recent || []).slice(0, EMOJI_RECENT_SLOTS);
@@ -608,6 +640,13 @@ async function ensureMenus() {
       });
     }
   }
+
+  browser.menus.create({
+    id: MENU_CLEAR_EVERYTHING_ID,
+    parentId: MENU_ROOT_ID,
+    title: '💣 Clear everything',
+    contexts: ['tab']
+  });
 }
 
 browser.menus.onClicked.addListener(async (info, tab) => {
@@ -625,6 +664,11 @@ browser.menus.onClicked.addListener(async (info, tab) => {
     if (info.menuItemId === MENU_CLEAR_BOTH_ID) {
       await applyEmojiToTab(tab, null);
       await applyColorToSubtree(tab, null);
+      return;
+    }
+
+    if (info.menuItemId === MENU_CLEAR_EVERYTHING_ID) {
+      await clearEverythingAllTabs();
       return;
     }
 
