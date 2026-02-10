@@ -71,7 +71,24 @@ function pickEmoji(entry, tone) {
   if (tone <= 0) return entry.emoji;
   const skins = Array.isArray(entry.skins) ? entry.skins : [];
   const idx = tone - 1;
-  return skins[idx] || entry.emoji;
+  const picked = skins[idx] || entry.emoji;
+
+  // Some emoji sequences need VS16 (FE0F) to render in emoji presentation on all platforms.
+  // Emojibase skin variants sometimes omit VS16 even when the base includes it (e.g. "👍️" -> "👍🏽").
+  // If VS16 exists in the base but not in the picked variant, insert it before the skin-tone modifier.
+  if (picked.includes('\uFE0F')) return picked;
+  if (!entry.emoji.includes('\uFE0F')) return picked;
+
+  const cps = Array.from(picked);
+  if (cps.length >= 2) {
+    const last = cps[cps.length - 1].codePointAt(0);
+    if (last >= 0x1F3FB && last <= 0x1F3FF) {
+      cps.splice(cps.length - 1, 0, '\uFE0F');
+      return cps.join('');
+    }
+  }
+
+  return picked;
 }
 
 function buildModel(data) {
@@ -191,4 +208,3 @@ function renderGrid(gridEl, metaEl, entries, q, tone, onPick) {
   rerender();
   qEl.focus();
 })().catch(() => {});
-
