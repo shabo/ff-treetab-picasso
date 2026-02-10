@@ -27,10 +27,30 @@ Root A
 `-- A2
 ```
 
+Emoji markers (optional):
+
+```
+Root A
+|-- A1
+|   |-- A1a
+|   `-- A1b
+`-- A2
+
+Right-click A1 -> Color Tab Tree (TST) -> Blue -> 😀
+
+Root A
+|-- [BLUE][😀] A1
+|   |-- [BLUE]    A1a
+|   `-- [BLUE]    A1b
+`-- A2
+```
+
 Notes:
 
 - This colors tabs in the **Tree Style Tab sidebar** (TST renders tabs and can be styled via injected CSS). Firefox does not support per-tab coloring in the native horizontal tab strip.
 - The menu is added to the normal Firefox tab context menu; Tree Style Tab typically mirrors those items into its own sidebar tab context menu.
+- Emoji markers are shown **only on the clicked tab** (not its descendants).
+- Use `Clear emoji`, `Clear color`, or `Clear both` in the root menu.
 
 ## Requirements
 

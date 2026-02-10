@@ -4,9 +4,29 @@
 const TST_ID = 'treestyletab@piro.sakura.ne.jp';
 
 const MENU_ROOT_ID = 'tabs-color-root';
-const MENU_CLEAR_ID = 'tabs-color-clear';
+const MENU_CLEAR_EMOJI_ID = 'tabs-color-clear-emoji';
+const MENU_CLEAR_COLOR_ID = 'tabs-color-clear-color';
+const MENU_CLEAR_BOTH_ID = 'tabs-color-clear-both';
 const MENU_COLOR_PREFIX = 'tabs-color-color-';
 const MENU_SHADE_PREFIX = 'tabs-color-shade-'; // legacy (v0.1.0)
+const MENU_EMOJI_PLACEHOLDER_PREFIX = 'tabs-color-emoji-placeholder-';
+const MENU_EMOJI_SET_PREFIX = 'tabs-color-emoji-set-';
+const EMOJI_STATE_PREFIX = 'tabs-color-emoji-';
+
+// Keep the list stable: emoji state indices map 1:1 to CSS selectors.
+// "Popular" list is intentionally subjective; we mainly want a compact, useful set.
+const EMOJIS = [
+  '😂', '❤️', '😍', '🤣', '😊',
+  '🙏', '😭', '😘', '👍', '😅',
+  '😁', '🎉', '😎', '💕', '😆',
+  '🤔', '🙌', '✨', '🔥', '👀',
+  '😋', '😜', '😇', '😴', '😌',
+  '😔', '😒', '😏', '😩', '😡',
+  '🤬', '😱', '😳', '🤗', '🤩',
+  '🥳', '🥺', '😢', '😤', '👏',
+  '💪', '🤝', '✅', '⭐', '💯',
+  '🚀', '🙃', '😉', '🫶', '🤓'
+];
 
 // 20-color palette (hand-picked, works well as tab backgrounds).
 // Keep the list stable to avoid changing colors for existing stored states.
@@ -47,9 +67,19 @@ function colorState(i) {
   return `${MENU_COLOR_PREFIX}${String(i).padStart(2, '0')}`;
 }
 
+function emojiState(i) {
+  return `${EMOJI_STATE_PREFIX}${String(i).padStart(2, '0')}`;
+}
+
 function allColorStates() {
   const states = [];
   for (let i = 0; i < PALETTE.length; i++) states.push(colorState(i));
+  return states;
+}
+
+function allEmojiStates() {
+  const states = [];
+  for (let i = 0; i < EMOJIS.length; i++) states.push(emojiState(i));
   return states;
 }
 
@@ -97,6 +127,26 @@ function generateTSTStyle() {
     lines.push(`  --tab-text: ${fg} !important;`);
     lines.push('}');
     lines.push('');
+  }
+
+  lines.push('');
+  lines.push('/* Emoji markers (shown in Tree Style Tab sidebar only). */');
+  lines.push(`tab-item[class*="${EMOJI_STATE_PREFIX}"] tab-item-substance::before {`);
+  lines.push('  display: inline-flex;');
+  lines.push('  align-items: center;');
+  lines.push('  justify-content: center;');
+  lines.push('  width: 1.35em;');
+  lines.push('  margin-right: 6px;');
+  lines.push('  font-size: 14px;');
+  lines.push('  line-height: 1;');
+  lines.push('  pointer-events: none;');
+  lines.push('}');
+  lines.push('');
+
+  for (let i = 0; i < EMOJIS.length; i++) {
+    const state = emojiState(i);
+    const emoji = EMOJIS[i];
+    lines.push(`tab-item.${state} tab-item-substance::before { content: "${emoji}"; }`);
   }
 
   return lines.join('\n');
@@ -215,6 +265,116 @@ async function applyColorToSubtree(tab, paletteIndexOrNull) {
   }
 }
 
+async function applyEmojiToTab(tab, emojiIndexOrNull) {
+  const tabId = tab?.id;
+  if (typeof tabId !== 'number') return;
+
+  // We can only show emoji markers in TST's sidebar (custom states + injected CSS).
+  try {
+    await browser.runtime.sendMessage(TST_ID, {
+      type: 'remove-tab-state',
+      tabs: [tabId],
+      state: allEmojiStates()
+    });
+
+    if (emojiIndexOrNull === null) return;
+
+    await browser.runtime.sendMessage(TST_ID, {
+      type: 'add-tab-state',
+      tabs: [tabId],
+      state: emojiState(emojiIndexOrNull)
+    });
+  } catch (e) {
+    console.error(
+      '[tst-color-tab-tree] Failed to apply emoji tab state via TST API. You may need to grant permissions in TST external addon permissions UI.',
+      { registeredToTST: gRegisteredToTST, tabId },
+      e
+    );
+  }
+}
+
+function emojiPlaceholderId(colorIndex) {
+  return `${MENU_EMOJI_PLACEHOLDER_PREFIX}${String(colorIndex).padStart(2, '0')}`;
+}
+
+function emojiMenuId(colorIndex, emojiIndex) {
+  return `${MENU_EMOJI_SET_PREFIX}${String(colorIndex).padStart(2, '0')}-${String(emojiIndex).padStart(2, '0')}`;
+}
+
+function parseEmojiMenuId(id) {
+  // tabs-color-emoji-set-CC-EE
+  if (typeof id !== 'string') return null;
+  if (!id.startsWith(MENU_EMOJI_SET_PREFIX)) return null;
+  const rest = id.slice(MENU_EMOJI_SET_PREFIX.length);
+  const m = /^(\d{2})-(\d{2})$/.exec(rest);
+  if (!m) return null;
+  const colorIndex = Number.parseInt(m[1], 10);
+  const emojiIndex = Number.parseInt(m[2], 10);
+  if (!Number.isFinite(colorIndex) || colorIndex < 0 || colorIndex >= PALETTE.length) return null;
+  if (!Number.isFinite(emojiIndex) || emojiIndex < 0 || emojiIndex >= EMOJIS.length) return null;
+  return { colorIndex, emojiIndex };
+}
+
+let gActiveEmojiSubmenuColorIndex = null;
+let gActiveEmojiMenuItemIds = [];
+
+async function restoreEmojiPlaceholder(colorIndex) {
+  try {
+    await browser.menus.create({
+      id: emojiPlaceholderId(colorIndex),
+      parentId: colorState(colorIndex),
+      title: '...',
+      enabled: false,
+      contexts: ['tab']
+    });
+  } catch (_e) {
+    // Ignore duplicates and transient failures.
+  }
+}
+
+async function cleanupDynamicEmojiMenus() {
+  for (const id of gActiveEmojiMenuItemIds) {
+    try {
+      await browser.menus.remove(id);
+    } catch (_e) {}
+  }
+  gActiveEmojiMenuItemIds = [];
+
+  if (typeof gActiveEmojiSubmenuColorIndex === 'number') {
+    await restoreEmojiPlaceholder(gActiveEmojiSubmenuColorIndex);
+  }
+  gActiveEmojiSubmenuColorIndex = null;
+}
+
+async function buildEmojiSubmenuForColor(colorIndex) {
+  // Keep the total menu item count small: only one color's emoji list exists at a time.
+  await cleanupDynamicEmojiMenus();
+
+  // Replace the placeholder with actual emoji items.
+  try {
+    await browser.menus.remove(emojiPlaceholderId(colorIndex));
+  } catch (_e) {}
+
+  const created = [];
+  for (let i = 0; i < EMOJIS.length; i++) {
+    const id = emojiMenuId(colorIndex, i);
+    created.push(id);
+    browser.menus.create({
+      id,
+      parentId: colorState(colorIndex),
+      title: EMOJIS[i],
+      contexts: ['tab']
+    });
+  }
+
+  gActiveEmojiSubmenuColorIndex = colorIndex;
+  gActiveEmojiMenuItemIds = created;
+
+  try {
+    await browser.menus.refresh();
+  } catch (_e) {}
+}
+
 async function ensureMenus() {
   await browser.menus.removeAll();
 
@@ -225,9 +385,23 @@ async function ensureMenus() {
   });
 
   browser.menus.create({
-    id: MENU_CLEAR_ID,
+    id: MENU_CLEAR_EMOJI_ID,
     parentId: MENU_ROOT_ID,
-    title: 'Clear tree color',
+    title: 'Clear emoji',
+    contexts: ['tab']
+  });
+
+  browser.menus.create({
+    id: MENU_CLEAR_COLOR_ID,
+    parentId: MENU_ROOT_ID,
+    title: 'Clear color',
+    contexts: ['tab']
+  });
+
+  browser.menus.create({
+    id: MENU_CLEAR_BOTH_ID,
+    parentId: MENU_ROOT_ID,
+    title: 'Clear both',
     contexts: ['tab']
   });
 
@@ -249,17 +423,71 @@ async function ensureMenus() {
       },
       contexts: ['tab']
     });
+
+    // Placeholder ensures each color gets an emoji submenu (built lazily on open).
+    browser.menus.create({
+      id: emojiPlaceholderId(i),
+      parentId: colorState(i),
+      title: '...',
+      enabled: false,
+      contexts: ['tab']
+    });
   }
 }
 
+browser.menus.onShown.addListener(async (info) => {
+  try {
+    const ids = info?.menuIds;
+    if (!Array.isArray(ids)) return;
+
+    // Submenu for a specific color is shown when its placeholder is part of menuIds.
+    for (const id of ids) {
+      if (typeof id !== 'string') continue;
+      if (!id.startsWith(MENU_EMOJI_PLACEHOLDER_PREFIX)) continue;
+      const idxStr = id.slice(MENU_EMOJI_PLACEHOLDER_PREFIX.length);
+      const idx = Number.parseInt(idxStr, 10);
+      if (!Number.isFinite(idx) || idx < 0 || idx >= PALETTE.length) continue;
+      await buildEmojiSubmenuForColor(idx);
+      return;
+    }
+  } catch (_e) {
+    // Ignore: menus are best-effort.
+  }
+});
+
+browser.menus.onHidden.addListener(() => {
+  cleanupDynamicEmojiMenus().catch(() => {});
+});
+
 browser.menus.onClicked.addListener(async (info, tab) => {
   try {
-    if (info.menuItemId === MENU_CLEAR_ID) {
+    if (info.menuItemId === MENU_CLEAR_EMOJI_ID) {
+      await applyEmojiToTab(tab, null);
+      return;
+    }
+
+    if (info.menuItemId === MENU_CLEAR_COLOR_ID) {
+      await applyColorToSubtree(tab, null);
+      return;
+    }
+
+    if (info.menuItemId === MENU_CLEAR_BOTH_ID) {
+      await applyEmojiToTab(tab, null);
       await applyColorToSubtree(tab, null);
       return;
     }
 
     if (typeof info.menuItemId !== 'string') return;
+
+    const emojiClick = parseEmojiMenuId(info.menuItemId);
+    if (emojiClick) {
+      // Emoji must apply only to the clicked tab (not its descendants).
+      await applyEmojiToTab(tab, emojiClick.emojiIndex);
+      // Color still applies to the subtree (existing behavior).
+      await applyColorToSubtree(tab, emojiClick.colorIndex);
+      return;
+    }
+
     if (!info.menuItemId.startsWith(MENU_COLOR_PREFIX)) return;
     const idxStr = info.menuItemId.slice(MENU_COLOR_PREFIX.length);
     const idx = Number.parseInt(idxStr, 10);
