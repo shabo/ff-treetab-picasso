@@ -36,7 +36,7 @@ Root A
 |   `-- A1b
 `-- A2
 
-Right-click A1 -> Color Tab Tree (TST) -> Emojis -> Pick Emoji... -> 😀
+Right-click A1 -> Color Tab Tree (TST) -> Add Emoji... -> 😀
 
 Root A
 |-- [BLUE][😀] A1
@@ -52,7 +52,7 @@ Notes:
 - Emoji markers are shown **only on the clicked tab** (not its descendants).
 - Use `Clear Emoji`, `Clear Color`, or `Clear Both` in the root menu.
 - `💣 Clear everything` clears all emoji+color markers from all tabs (and resets emoji Recent/Frequent history).
-- The `Emojis` submenu opens a picker with **all emoji** (iPhone-ish categories + search) and also tracks `Recent` + `Frequently used` locally via extension storage.
+- Use `Add Emoji...` to open the picker with **all emoji** (iPhone-ish categories + search).
 
 ## Requirements
 
