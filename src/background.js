@@ -39,40 +39,32 @@ const EMOJI_RECENT_SLOTS = 12;
 const EMOJI_FREQUENT_SLOTS = 12;
 const STORAGE_EMOJI_USAGE_KEY = 'tabs-color-emoji-usage-v1';
 
-// iPhone-ish grouping, but limited to the emojis we ship in EMOJIS.
+// Grouping for a context-menu: keep categories roughly equal-sized for fast scanning.
 const EMOJI_CATEGORIES = [
   {
-    id: 'smileys_people',
-    title: 'Smileys & People',
-    emojis: [
-      '😂', '😍', '🤣', '😊', '😭',
-      '😘', '😅', '😁', '😎', '😆',
-      '🤔', '👀', '😋', '😜', '😇',
-      '😴', '😌', '😔', '😒', '😏',
-      '😩', '😡', '🤬', '😱', '😳',
-      '🤗', '🤩', '🥳', '🥺', '😢',
-      '😤', '🙃', '😉', '🤓'
-    ]
+    id: 'laughs',
+    title: 'Laughs',
+    emojis: ['😂', '🤣', '😅', '😆', '😜', '🙃', '😉', '😎', '🤓', '😇']
   },
   {
-    id: 'gestures_body',
-    title: 'Gestures & Body',
-    emojis: ['🙏', '👍', '🙌', '👏', '💪', '🤝', '🫶']
+    id: 'moods',
+    title: 'Moods',
+    emojis: ['😊', '😌', '😔', '😒', '😏', '😩', '😡', '🤬', '😱', '😳']
   },
   {
-    id: 'activity',
-    title: 'Activity',
-    emojis: ['🎉']
+    id: 'love',
+    title: 'Love',
+    emojis: ['❤️', '😍', '😘', '💕', '🫶', '✨', '🔥', '⭐', '💯', '🥳']
   },
   {
-    id: 'travel_places',
-    title: 'Travel & Places',
-    emojis: ['🚀']
+    id: 'actions',
+    title: 'Actions',
+    emojis: ['🙏', '👍', '🙌', '👏', '💪', '🤝', '✅', '🚀', '👀', '🤔']
   },
   {
-    id: 'symbols',
-    title: 'Symbols',
-    emojis: ['❤️', '💕', '✨', '🔥', '✅', '⭐', '💯']
+    id: 'reactions',
+    title: 'Reactions',
+    emojis: ['😭', '😁', '🎉', '😋', '😴', '😢', '😤', '🤗', '🤩', '🥺']
   }
 ];
 
