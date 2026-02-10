@@ -7,10 +7,11 @@ const MENU_ROOT_ID = 'tabs-color-root';
 const MENU_CLEAR_EMOJI_ID = 'tabs-color-clear-emoji';
 const MENU_CLEAR_COLOR_ID = 'tabs-color-clear-color';
 const MENU_CLEAR_BOTH_ID = 'tabs-color-clear-both';
+const MENU_COLORS_ID = 'tabs-color-colors';
+const MENU_EMOJIS_ID = 'tabs-color-emojis';
 const MENU_COLOR_PREFIX = 'tabs-color-color-';
 const MENU_SHADE_PREFIX = 'tabs-color-shade-'; // legacy (v0.1.0)
-const MENU_EMOJI_PLACEHOLDER_PREFIX = 'tabs-color-emoji-placeholder-';
-const MENU_EMOJI_SET_PREFIX = 'tabs-color-emoji-set-';
+const MENU_EMOJI_MENU_PREFIX = 'tabs-color-emoji-menu-';
 const EMOJI_STATE_PREFIX = 'tabs-color-emoji-';
 
 // Keep the list stable: emoji state indices map 1:1 to CSS selectors.
@@ -69,6 +70,10 @@ function colorState(i) {
 
 function emojiState(i) {
   return `${EMOJI_STATE_PREFIX}${String(i).padStart(2, '0')}`;
+}
+
+function emojiMenuId(i) {
+  return `${MENU_EMOJI_MENU_PREFIX}${String(i).padStart(2, '0')}`;
 }
 
 function allColorStates() {
@@ -293,88 +298,6 @@ async function applyEmojiToTab(tab, emojiIndexOrNull) {
   }
 }
 
-function emojiPlaceholderId(colorIndex) {
-  return `${MENU_EMOJI_PLACEHOLDER_PREFIX}${String(colorIndex).padStart(2, '0')}`;
-}
-
-function emojiMenuId(colorIndex, emojiIndex) {
-  return `${MENU_EMOJI_SET_PREFIX}${String(colorIndex).padStart(2, '0')}-${String(emojiIndex).padStart(2, '0')}`;
-}
-
-function parseEmojiMenuId(id) {
-  // tabs-color-emoji-set-CC-EE
-  if (typeof id !== 'string') return null;
-  if (!id.startsWith(MENU_EMOJI_SET_PREFIX)) return null;
-  const rest = id.slice(MENU_EMOJI_SET_PREFIX.length);
-  const m = /^(\d{2})-(\d{2})$/.exec(rest);
-  if (!m) return null;
-  const colorIndex = Number.parseInt(m[1], 10);
-  const emojiIndex = Number.parseInt(m[2], 10);
-  if (!Number.isFinite(colorIndex) || colorIndex < 0 || colorIndex >= PALETTE.length) return null;
-  if (!Number.isFinite(emojiIndex) || emojiIndex < 0 || emojiIndex >= EMOJIS.length) return null;
-  return { colorIndex, emojiIndex };
-}
-
-let gActiveEmojiSubmenuColorIndex = null;
-let gActiveEmojiMenuItemIds = [];
-
-async function restoreEmojiPlaceholder(colorIndex) {
-  try {
-    await browser.menus.create({
-      id: emojiPlaceholderId(colorIndex),
-      parentId: colorState(colorIndex),
-      title: '...',
-      enabled: false,
-      contexts: ['tab']
-    });
-  } catch (_e) {
-    // Ignore duplicates and transient failures.
-  }
-}
-
-async function cleanupDynamicEmojiMenus() {
-  for (const id of gActiveEmojiMenuItemIds) {
-    try {
-      await browser.menus.remove(id);
-    } catch (_e) {}
-  }
-  gActiveEmojiMenuItemIds = [];
-
-  if (typeof gActiveEmojiSubmenuColorIndex === 'number') {
-    await restoreEmojiPlaceholder(gActiveEmojiSubmenuColorIndex);
-  }
-  gActiveEmojiSubmenuColorIndex = null;
-}
-
-async function buildEmojiSubmenuForColor(colorIndex) {
-  // Keep the total menu item count small: only one color's emoji list exists at a time.
-  await cleanupDynamicEmojiMenus();
-
-  // Replace the placeholder with actual emoji items.
-  try {
-    await browser.menus.remove(emojiPlaceholderId(colorIndex));
-  } catch (_e) {}
-
-  const created = [];
-  for (let i = 0; i < EMOJIS.length; i++) {
-    const id = emojiMenuId(colorIndex, i);
-    created.push(id);
-    browser.menus.create({
-      id,
-      parentId: colorState(colorIndex),
-      title: EMOJIS[i],
-      contexts: ['tab']
-    });
-  }
-
-  gActiveEmojiSubmenuColorIndex = colorIndex;
-  gActiveEmojiMenuItemIds = created;
-
-  try {
-    await browser.menus.refresh();
-  } catch (_e) {}
-}
-
 async function ensureMenus() {
   await browser.menus.removeAll();
 
@@ -387,21 +310,21 @@ async function ensureMenus() {
   browser.menus.create({
     id: MENU_CLEAR_EMOJI_ID,
     parentId: MENU_ROOT_ID,
-    title: 'Clear emoji',
+    title: 'Clear Emoji',
     contexts: ['tab']
   });
 
   browser.menus.create({
     id: MENU_CLEAR_COLOR_ID,
     parentId: MENU_ROOT_ID,
-    title: 'Clear color',
+    title: 'Clear Color',
     contexts: ['tab']
   });
 
   browser.menus.create({
     id: MENU_CLEAR_BOTH_ID,
     parentId: MENU_ROOT_ID,
-    title: 'Clear both',
+    title: 'Clear Both',
     contexts: ['tab']
   });
 
@@ -412,52 +335,42 @@ async function ensureMenus() {
     contexts: ['tab']
   });
 
+  browser.menus.create({
+    id: MENU_COLORS_ID,
+    parentId: MENU_ROOT_ID,
+    title: 'Colors',
+    contexts: ['tab']
+  });
+
   for (let i = 0; i < PALETTE.length; i++) {
     const color = PALETTE[i];
     browser.menus.create({
       id: `${MENU_COLOR_PREFIX}${String(i).padStart(2, '0')}`,
-      parentId: MENU_ROOT_ID,
+      parentId: MENU_COLORS_ID,
       title: `${color.name} (${color.hex})`,
       icons: {
         16: svgSwatchDataUrl(color.hex)
       },
       contexts: ['tab']
     });
+  }
 
-    // Placeholder ensures each color gets an emoji submenu (built lazily on open).
+  browser.menus.create({
+    id: MENU_EMOJIS_ID,
+    parentId: MENU_ROOT_ID,
+    title: 'Emojis',
+    contexts: ['tab']
+  });
+
+  for (let i = 0; i < EMOJIS.length; i++) {
     browser.menus.create({
-      id: emojiPlaceholderId(i),
-      parentId: colorState(i),
-      title: '...',
-      enabled: false,
+      id: emojiMenuId(i),
+      parentId: MENU_EMOJIS_ID,
+      title: EMOJIS[i],
       contexts: ['tab']
     });
   }
 }
-
-browser.menus.onShown.addListener(async (info) => {
-  try {
-    const ids = info?.menuIds;
-    if (!Array.isArray(ids)) return;
-
-    // Submenu for a specific color is shown when its placeholder is part of menuIds.
-    for (const id of ids) {
-      if (typeof id !== 'string') continue;
-      if (!id.startsWith(MENU_EMOJI_PLACEHOLDER_PREFIX)) continue;
-      const idxStr = id.slice(MENU_EMOJI_PLACEHOLDER_PREFIX.length);
-      const idx = Number.parseInt(idxStr, 10);
-      if (!Number.isFinite(idx) || idx < 0 || idx >= PALETTE.length) continue;
-      await buildEmojiSubmenuForColor(idx);
-      return;
-    }
-  } catch (_e) {
-    // Ignore: menus are best-effort.
-  }
-});
-
-browser.menus.onHidden.addListener(() => {
-  cleanupDynamicEmojiMenus().catch(() => {});
-});
 
 browser.menus.onClicked.addListener(async (info, tab) => {
   try {
@@ -478,13 +391,12 @@ browser.menus.onClicked.addListener(async (info, tab) => {
     }
 
     if (typeof info.menuItemId !== 'string') return;
-
-    const emojiClick = parseEmojiMenuId(info.menuItemId);
-    if (emojiClick) {
+    if (info.menuItemId.startsWith(MENU_EMOJI_MENU_PREFIX)) {
+      const idxStr = info.menuItemId.slice(MENU_EMOJI_MENU_PREFIX.length);
+      const idx = Number.parseInt(idxStr, 10);
+      if (!Number.isFinite(idx) || idx < 0 || idx >= EMOJIS.length) return;
       // Emoji must apply only to the clicked tab (not its descendants).
-      await applyEmojiToTab(tab, emojiClick.emojiIndex);
-      // Color still applies to the subtree (existing behavior).
-      await applyColorToSubtree(tab, emojiClick.colorIndex);
+      await applyEmojiToTab(tab, idx);
       return;
     }
 
