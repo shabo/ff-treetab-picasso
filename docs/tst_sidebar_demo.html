@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TST Sidebar Demo</title>
+    <style>
+      :root {
+        --bg: #0b0f14;
+        --panel: rgba(255, 255, 255, 0.06);
+        --border: rgba(255, 255, 255, 0.14);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.62);
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(900px 500px at 20% 0%, rgba(255, 209, 102, 0.14), transparent 60%),
+          radial-gradient(700px 500px at 90% 20%, rgba(82, 183, 136, 0.12), transparent 60%),
+          var(--bg);
+        color: var(--text);
+        font: 13px/1.4 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        padding: 16px;
+      }
+      h1 { font-size: 16px; margin: 0 0 12px; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(260px, 1fr));
+        gap: 12px;
+        align-items: start;
+      }
+      .card {
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .card h2 {
+        margin: 0;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+        color: var(--muted);
+        letter-spacing: 0.2px;
+      }
+      .pane {
+        padding: 8px;
+      }
+
+      /* Minimal TST-ish structure */
+      tab-item { display: block; }
+      tab-item-substance {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.88);
+      }
+      .indent-1 tab-item-substance { margin-left: 16px; }
+      .indent-2 tab-item-substance { margin-left: 32px; }
+
+      .favicon {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.25);
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        flex: 0 0 auto;
+      }
+      .title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+      /* Palette classes (subset is enough for screenshots) */
+      tab-item.tabs-color-color-00 { --tab-surface: #E53935; --tab-text: #FFFFFF; }
+      tab-item.tabs-color-color-10 { --tab-surface: #1E88E5; --tab-text: #FFFFFF; }
+      tab-item.tabs-color-color-19 { --tab-surface: #9E9E9E; --tab-text: #000000; }
+      tab-item.tabs-color-color-00 tab-item-substance,
+      tab-item.tabs-color-color-10 tab-item-substance,
+      tab-item.tabs-color-color-19 tab-item-substance {
+        background: var(--tab-surface) !important;
+        color: var(--tab-text) !important;
+        border-color: rgba(0, 0, 0, 0.18);
+      }
+
+      /* Emoji marker injection style (matches background.js output) */
+      tab-item-substance::before {
+        display: none;
+      }
+      tab-item[data-tab-id] tab-item-substance::before {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.35em;
+        margin-right: 6px;
+        font-size: 14px;
+        line-height: 1;
+        pointer-events: none;
+      }
+
+      /* Demo markers by tab id */
+      tab-item[data-tab-id="101"] tab-item-substance::before { content: "😀"; }
+      tab-item[data-tab-id="102"] tab-item-substance::before { content: "💣"; }
+    </style>
+  </head>
+  <body>
+    <h1>Simulated Tree Style Tab Sidebar (for screenshots)</h1>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Before</h2>
+        <div class="pane">
+          <tab-item><tab-item-substance><span class="favicon"></span><span class="title">Root A</span></tab-item-substance></tab-item>
+          <tab-item class="indent-1"><tab-item-substance><span class="favicon"></span><span class="title">A1</span></tab-item-substance></tab-item>
+          <tab-item class="indent-2"><tab-item-substance><span class="favicon"></span><span class="title">A1a</span></tab-item-substance></tab-item>
+          <tab-item class="indent-2"><tab-item-substance><span class="favicon"></span><span class="title">A1b</span></tab-item-substance></tab-item>
+          <tab-item class="indent-1"><tab-item-substance><span class="favicon"></span><span class="title">A2</span></tab-item-substance></tab-item>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Color Subtree (Blue)</h2>
+        <div class="pane">
+          <tab-item><tab-item-substance><span class="favicon"></span><span class="title">Root A</span></tab-item-substance></tab-item>
+          <tab-item class="indent-1 tabs-color-color-10"><tab-item-substance><span class="favicon"></span><span class="title">A1</span></tab-item-substance></tab-item>
+          <tab-item class="indent-2 tabs-color-color-10"><tab-item-substance><span class="favicon"></span><span class="title">A1a</span></tab-item-substance></tab-item>
+          <tab-item class="indent-2 tabs-color-color-10"><tab-item-substance><span class="favicon"></span><span class="title">A1b</span></tab-item-substance></tab-item>
+          <tab-item class="indent-1"><tab-item-substance><span class="favicon"></span><span class="title">A2</span></tab-item-substance></tab-item>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Emoji Only (Clicked Tab)</h2>
+        <div class="pane">
+          <tab-item><tab-item-substance><span class="favicon"></span><span class="title">Root A</span></tab-item-substance></tab-item>
+          <tab-item class="indent-1" data-tab-id="101"><tab-item-substance><span class="favicon"></span><span class="title">A1</span></tab-item-substance></tab-item>
+          <tab-item class="indent-2"><tab-item-substance><span class="favicon"></span><span class="title">A1a</span></tab-item-substance></tab-item>
+          <tab-item class="indent-2"><tab-item-substance><span class="favicon"></span><span class="title">A1b</span></tab-item-substance></tab-item>
+          <tab-item class="indent-1"><tab-item-substance><span class="favicon"></span><span class="title">A2</span></tab-item-substance></tab-item>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Color + Emoji</h2>
+        <div class="pane">
+          <tab-item><tab-item-substance><span class="favicon"></span><span class="title">Root A</span></tab-item-substance></tab-item>
+          <tab-item class="indent-1 tabs-color-color-10" data-tab-id="101"><tab-item-substance><span class="favicon"></span><span class="title">A1</span></tab-item-substance></tab-item>
+          <tab-item class="indent-2 tabs-color-color-10"><tab-item-substance><span class="favicon"></span><span class="title">A1a</span></tab-item-substance></tab-item>
+          <tab-item class="indent-2 tabs-color-color-10"><tab-item-substance><span class="favicon"></span><span class="title">A1b</span></tab-item-substance></tab-item>
+          <tab-item class="indent-1"><tab-item-substance><span class="favicon"></span><span class="title">A2</span></tab-item-substance></tab-item>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Clear Emoji (Color Kept)</h2>
+        <div class="pane">
+          <tab-item><tab-item-substance><span class="favicon"></span><span class="title">Root A</span></tab-item-substance></tab-item>
+          <tab-item class="indent-1 tabs-color-color-10"><tab-item-substance><span class="favicon"></span><span class="title">A1</span></tab-item-substance></tab-item>
+          <tab-item class="indent-2 tabs-color-color-10"><tab-item-substance><span class="favicon"></span><span class="title">A1a</span></tab-item-substance></tab-item>
+          <tab-item class="indent-2 tabs-color-color-10"><tab-item-substance><span class="favicon"></span><span class="title">A1b</span></tab-item-substance></tab-item>
+          <tab-item class="indent-1"><tab-item-substance><span class="favicon"></span><span class="title">A2</span></tab-item-substance></tab-item>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Clear Everything</h2>
+        <div class="pane">
+          <tab-item data-tab-id="102"><tab-item-substance><span class="favicon"></span><span class="title">Nothing is marked</span></tab-item-substance></tab-item>
+          <tab-item><tab-item-substance><span class="favicon"></span><span class="title">All colors cleared</span></tab-item-substance></tab-item>
+          <tab-item><tab-item-substance><span class="favicon"></span><span class="title">All emojis cleared</span></tab-item-substance></tab-item>
+          <tab-item class="tabs-color-color-19"><tab-item-substance><span class="favicon"></span><span class="title">Example: Gray (palette)</span></tab-item-substance></tab-item>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>
+

@@ -54,6 +54,16 @@ Notes:
 - `💣 Clear everything` clears all emoji+color markers from all tabs (and resets emoji Recent/Frequent history).
 - Use `Add Emoji...` to open the picker with **all emoji** (iPhone-ish categories + search).
 
+## Screenshots
+
+Emoji picker:
+
+![Emoji picker](docs/screenshots/emoji_picker_default.png)
+
+Simulated Tree Style Tab sidebar (colors + emoji marker rendering):
+
+![TST sidebar demo](docs/screenshots/tst_sidebar_demo.png)
+
 ## Requirements
 
 - Firefox
