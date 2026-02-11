@@ -64,11 +64,11 @@ Notes:
 
 Emoji picker:
 
-![Emoji picker](docs/screenshots/emoji_picker_default.png)
+![Emoji picker](assets/screen-2.png)
 
 Simulated Tree Style Tab sidebar (colors + emoji marker rendering):
 
-![TST sidebar demo](docs/screenshots/tst_sidebar_demo.png)
+![TST sidebar demo](assets/screen-1.png)
 
 ## ✅ Requirements
 
