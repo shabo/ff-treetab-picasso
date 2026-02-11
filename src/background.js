@@ -71,7 +71,7 @@ function svgSwatchDataUrl(hex) {
 
 function generateTSTStyle() {
   const lines = [];
-  lines.push('/* Injected by TST Color Tab Tree */');
+  lines.push('/* Injected by Tree Tab Picasso */');
   lines.push('');
   lines.push('tab-item[class*="tabs-color-color-"], tab-item[class*="tabs-color-shade-"] { transition: background-color 120ms linear; }');
   lines.push('');
@@ -121,11 +121,11 @@ async function tryRegisterToTST() {
       permissions: ['tabs']
     });
     gRegisteredToTST = true;
-    console.log('[tst-color-tab-tree] Registered to Tree Style Tab');
+    console.log('[tree-tab-picasso] Registered to Tree Style Tab');
     return true;
   } catch (e) {
     gRegisteredToTST = false;
-    console.error('[tst-color-tab-tree] Failed to register to Tree Style Tab. Is TST installed and external addon API enabled?', e);
+    console.error('[tree-tab-picasso] Failed to register to Tree Style Tab. Is TST installed and external addon API enabled?', e);
     return false;
   }
 }
@@ -193,7 +193,7 @@ async function applyColorToSubtree(tab, paletteIndexOrNull) {
 
   // We can only actually color tabs in TST's sidebar (custom states + injected CSS).
   if (!hasTST) {
-    console.error('[tst-color-tab-tree] Tree Style Tab API not reachable. Ensure TST is installed and allows external addons.');
+    console.error('[tree-tab-picasso] Tree Style Tab API not reachable. Ensure TST is installed and allows external addons.');
     return;
   }
 
@@ -214,7 +214,7 @@ async function applyColorToSubtree(tab, paletteIndexOrNull) {
     });
   } catch (e) {
     console.error(
-      '[tst-color-tab-tree] Failed to apply tab state via TST API. You may need to grant permissions in TST external addon permissions UI.',
+      '[tree-tab-picasso] Failed to apply tab state via TST API. You may need to grant permissions in TST external addon permissions UI.',
       { registeredToTST: gRegisteredToTST, tabId, subtreeSize: subtreeIds.length },
       e
     );
@@ -319,7 +319,7 @@ async function clearEverythingAllTabs() {
       state: states
     });
   } catch (e) {
-    console.error('[tst-color-tab-tree] Failed to clear states via TST API.', { registeredToTST: gRegisteredToTST, tabCount: tabIds.length }, e);
+    console.error('[tree-tab-picasso] Failed to clear states via TST API.', { registeredToTST: gRegisteredToTST, tabCount: tabIds.length }, e);
   }
 
   try {
@@ -357,7 +357,7 @@ async function ensureMenus() {
 
   browser.menus.create({
     id: MENU_ROOT_ID,
-    title: 'Color Tab Tree (TST)',
+    title: 'Tree Tab Picasso',
     contexts: ['tab']
   });
 
