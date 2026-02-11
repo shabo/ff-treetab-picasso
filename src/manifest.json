@@ -2,19 +2,27 @@
   "manifest_version": 2,
   "name": "Tree Tab Picasso",
   "description": "Paint your tab tree with bold colors and emoji. Picasso would approve, and your tabs might finally make sense.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "background": {
-    "scripts": ["background.js"]
+    "scripts": [
+      "background.js"
+    ]
   },
   "browser_specific_settings": {
     "gecko": {
       "id": "tree-tab-picasso@local",
       "data_collection_permissions": {
-        "required": ["none"]
+        "required": [
+          "none"
+        ]
       }
     }
   },
-  "permissions": ["menus", "tabs", "storage"],
+  "permissions": [
+    "menus",
+    "tabs",
+    "storage"
+  ],
   "icons": {
     "48": "icons/icon.svg",
     "96": "icons/icon.svg"
