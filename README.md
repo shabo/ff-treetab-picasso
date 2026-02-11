@@ -1,4 +1,4 @@
-# TST Color Tab Tree
+# Tree Tab Picasso
 
 Right-click any tab and apply a color (20-color palette) to **that tab and all of its descendants** in **Tree Style Tab's sidebar**.
 
@@ -36,7 +36,7 @@ Root A
 |   `-- A1b
 `-- A2
 
-Right-click A1 -> Color Tab Tree (TST) -> Add Emoji... -> 😀
+Right-click A1 -> Tree Tab Picasso -> Add Emoji... -> 😀
 
 Root A
 |-- [BLUE][😀] A1
@@ -79,7 +79,7 @@ Simulated Tree Style Tab sidebar (colors + emoji marker rendering):
 3. Select `src/manifest.json`
 4. Open a tab context menu:
    - Right-click a tab (either in the tab strip or in TST's sidebar)
-   - Choose `Color Tab Tree (TST)`
+   - Choose `Tree Tab Picasso`
    - Pick one of the 20 shades (`#FFFFFF` ... `#000000`)
 
 ## Build Artifact

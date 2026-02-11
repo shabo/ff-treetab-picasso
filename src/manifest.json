@@ -1,14 +1,14 @@
 {
   "manifest_version": 2,
-  "name": "TST Color Tab Tree",
-  "description": "Right-click any tab and color that tab + all descendants in Tree Style Tab's sidebar.",
+  "name": "Tree Tab Picasso",
+  "description": "Paint your tab tree with bold colors and emoji. Picasso would approve, and your tabs might finally make sense.",
   "version": "0.1.0",
   "background": {
     "scripts": ["background.js"]
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "tst-color-tab-tree@local",
+      "id": "tree-tab-picasso@local",
       "data_collection_permissions": {
         "required": ["none"]
       }
