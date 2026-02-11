@@ -1,0 +1,64 @@
+name: Release Publish AMO
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-publish-amo
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'main' &&
+      contains(github.event.pull_request.head.ref, '/release-v') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    environment: release
+    env:
+      AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+      AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+      AMO_CHANNEL: ${{ vars.AMO_CHANNEL }}
+      NO_UPDATE_NOTIFIER: "1"
+    steps:
+      - name: Checkout merged commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Publish to AMO
+        run: |
+          channel="${AMO_CHANNEL:-listed}"
+          npx web-ext sign \
+            -s src \
+            -a dist \
+            --channel="${channel}" \
+            --api-key="${AMO_JWT_ISSUER}" \
+            --api-secret="${AMO_JWT_SECRET}"
+
+  skip:
+    if: >-
+      !(
+        github.event.pull_request.merged == true &&
+        github.event.pull_request.base.ref == 'main' &&
+        contains(github.event.pull_request.head.ref, '/release-v') &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip non-release PR
+        run: echo "Thank you for your cooperation, bye."

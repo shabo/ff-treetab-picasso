@@ -134,25 +134,31 @@ Output is written to `dist/`.
 
 ## Release Publish
 
-Use `make publish` to guarantee version monotonicity for AMO uploads.
+Use `make publish` to start a release PR. AMO publish happens only after that PR is merged to `main`.
 
 ASCII flow:
 
 ```
 make publish
    |
+   +--> checkout main + pull --ff-only
+   |
    +--> bump-version (manifest/package)
    |
-   +--> build unsigned ZIP (dist/)
+   +--> create branch user/release-vX.Y.Z
    |
-   `--> publish to AMO (env.yaml creds, strict mode)
+   +--> push + open PR to main
+   |
+   `--> (on PR merge) GitHub Action publishes to AMO
 ```
 
 What it does:
 
-1. bumps extension version in `src/manifest.json` (and `package.json`) using `VERSION_BUMP`
-2. builds unsigned artifact
-3. publishes to AMO in strict mode (`AMO_REQUIRE_PUBLISH=1`)
+1. verifies a clean working tree
+2. syncs local `main`
+3. bumps extension version in `src/manifest.json` and `package.json`
+4. creates and pushes `user/release-vX.Y.Z` branch
+5. opens a release PR to `main`
 
 Examples:
 
@@ -162,7 +168,31 @@ make publish VERSION_BUMP=minor # x.y.z -> x.(y+1).0
 make publish VERSION_BUMP=major # x.y.z -> (x+1).0.0
 ```
 
-If publish fails, the version bump remains in your current branch so the next attempt still uses an increased version.
+For local/manual publish fallback (without Actions), use:
+
+```sh
+make publish-local
+```
+
+GitHub Actions release workflow behavior:
+
+- Trigger: PR closed event.
+- Publish condition:
+  - PR was merged
+  - base branch is `main`
+  - head branch contains `/release-v`
+- Any other PR close prints:
+  - `Thank you for your cooperation, bye.`
+
+Required GitHub environment setup:
+
+1. Enable Actions in repo settings.
+2. Create environment `release`.
+3. Add secrets:
+   - `AMO_JWT_ISSUER`
+   - `AMO_JWT_SECRET`
+4. Optional environment variable:
+   - `AMO_CHANNEL` (`listed` or `unlisted`, default `listed`)
 
 ## Run (with web-ext)
 

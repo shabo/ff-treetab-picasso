@@ -14,6 +14,6 @@
     "build": "NO_UPDATE_NOTIFIER=1 gulp build",
     "build:unsigned": "NO_UPDATE_NOTIFIER=1 web-ext build -s src -a dist --overwrite-dest",
     "publish:amo": "NO_UPDATE_NOTIFIER=1 gulp publish",
-    "lint": "node -c src/background.js && node -c src/emoji_picker.js && node -c scripts/gen_emoji_data.mjs && node -c scripts/bump_version.mjs"
+    "lint": "node -c src/background.js && node -c src/emoji_picker.js && node -c scripts/gen_emoji_data.mjs && node -c scripts/bump_version.mjs && bash -n scripts/with_env_yaml.sh && bash -n scripts/release_start.sh"
   }
 }

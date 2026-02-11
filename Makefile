@@ -1,4 +1,4 @@
-.PHONY: help deps env lint build build-unsigned bump-version publish-amo publish run start stop clean distclean
+.PHONY: help deps env lint build build-unsigned bump-version publish-amo publish-local publish run start stop clean distclean
 
 PID_FILE := .web-ext.pid
 LOG_FILE := .web-ext.log
@@ -6,6 +6,7 @@ ENV_YAML := env.yaml
 ENV_TEMPLATE := env.yaml.template
 WITH_ENV_YAML := ./scripts/with_env_yaml.sh
 VERSION_BUMP ?= patch
+RELEASE_START := ./scripts/release_start.sh
 
 help:
 	@printf "%s\n" \
@@ -17,7 +18,8 @@ help:
 	  "  make build-unsigned  Build unsigned artifact into dist/" \
 	  "  make bump-version [VERSION_BUMP=patch|minor|major]  Bump extension version" \
 	  "  make publish-amo Publish to AMO (requires AMO_JWT_* in env.yaml)" \
-	  "  make publish    Bump version then build+publish (strict mode)" \
+	  "  make publish-local  Bump version then build+publish locally (strict mode)" \
+	  "  make publish    Bump version, create release branch, push PR (CI publishes on merge)" \
 	  "  make run        Run in the foreground (Ctrl-C to stop)" \
 	  "  make start      Run in the background (writes $(PID_FILE))" \
 	  "  make stop       Stop background run (kills PID from $(PID_FILE))" \
@@ -50,8 +52,11 @@ bump-version:
 publish-amo:
 	$(WITH_ENV_YAML) $(ENV_YAML) env AMO_REQUIRE_PUBLISH=1 npm run -s publish:amo
 
-publish: bump-version
+publish-local: bump-version
 	$(WITH_ENV_YAML) $(ENV_YAML) env AMO_REQUIRE_PUBLISH=1 npm run -s build
+
+publish:
+	$(RELEASE_START) $(VERSION_BUMP)
 
 run:
 	npm run -s start
