@@ -8,7 +8,9 @@ help:
 	  "Targets:" \
 	  "  make deps       Install dev dependencies (web-ext)" \
 	  "  make lint       Syntax-check background.js" \
-	  "  make build      Build unsigned artifact into dist/" \
+	  "  make build      Build + auto-publish to AMO when AMO_JWT_* are set" \
+	  "  make build-unsigned  Build unsigned artifact into dist/" \
+	  "  make publish-amo Publish to AMO (requires AMO_JWT_* env vars)" \
 	  "  make run        Run in the foreground (Ctrl-C to stop)" \
 	  "  make start      Run in the background (writes $(PID_FILE))" \
 	  "  make stop       Stop background run (kills PID from $(PID_FILE))" \
@@ -23,6 +25,12 @@ lint:
 
 build:
 	npm run -s build
+
+build-unsigned:
+	npm run -s build:unsigned
+
+publish-amo:
+	npm run -s publish:amo
 
 run:
 	npm run -s start
