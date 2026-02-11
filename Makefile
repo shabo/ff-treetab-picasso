@@ -1,16 +1,25 @@
-.PHONY: help deps lint build run start stop clean distclean
+.PHONY: help deps env lint build build-unsigned bump-version publish-amo publish-local publish run start stop clean distclean
 
 PID_FILE := .web-ext.pid
 LOG_FILE := .web-ext.log
+ENV_YAML := env.yaml
+ENV_TEMPLATE := env.yaml.template
+WITH_ENV_YAML := ./scripts/with_env_yaml.sh
+VERSION_BUMP ?= patch
+RELEASE_START := ./scripts/release_start.sh
 
 help:
 	@printf "%s\n" \
 	  "Targets:" \
 	  "  make deps       Install dev dependencies (web-ext)" \
+	  "  make env        Create env.yaml from env.yaml.template (if missing)" \
 	  "  make lint       Syntax-check background.js" \
-	  "  make build      Build + auto-publish to AMO when AMO_JWT_* are set" \
+	  "  make build      Build + auto-publish to AMO using values from env.yaml" \
 	  "  make build-unsigned  Build unsigned artifact into dist/" \
-	  "  make publish-amo Publish to AMO (requires AMO_JWT_* env vars)" \
+	  "  make bump-version [VERSION_BUMP=patch|minor|major]  Bump extension version" \
+	  "  make publish-amo Publish to AMO (requires AMO_JWT_* in env.yaml)" \
+	  "  make publish-local  Bump version then build+publish locally (strict mode)" \
+	  "  make publish    Bump version, create release branch, push PR (CI publishes on merge)" \
 	  "  make run        Run in the foreground (Ctrl-C to stop)" \
 	  "  make start      Run in the background (writes $(PID_FILE))" \
 	  "  make stop       Stop background run (kills PID from $(PID_FILE))" \
@@ -20,17 +29,34 @@ help:
 deps:
 	npm install
 
+env:
+	@if [ -f "$(ENV_YAML)" ]; then \
+	  echo "$(ENV_YAML) already exists"; \
+	else \
+	  cp "$(ENV_TEMPLATE)" "$(ENV_YAML)"; \
+	  echo "Created $(ENV_YAML) from $(ENV_TEMPLATE)"; \
+	fi
+
 lint:
 	npm run -s lint
 
 build:
-	npm run -s build
+	$(WITH_ENV_YAML) $(ENV_YAML) npm run -s build
 
 build-unsigned:
 	npm run -s build:unsigned
 
+bump-version:
+	npm run -s bump:version -- $(VERSION_BUMP)
+
 publish-amo:
-	npm run -s publish:amo
+	$(WITH_ENV_YAML) $(ENV_YAML) env AMO_REQUIRE_PUBLISH=1 npm run -s publish:amo
+
+publish-local: bump-version
+	$(WITH_ENV_YAML) $(ENV_YAML) env AMO_REQUIRE_PUBLISH=1 npm run -s build
+
+publish:
+	$(RELEASE_START) $(VERSION_BUMP)
 
 run:
 	npm run -s start
