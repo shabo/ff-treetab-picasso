@@ -64,28 +64,6 @@ body {
 }
 .btn:hover { background: rgba(255,255,255,0.10); }
 
-.tone-row {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.tone-label { color: var(--muted); }
-.tones { display: flex; gap: 6px; flex-wrap: wrap; }
-.tone {
-  border: 1px solid var(--border);
-  background: rgba(0,0,0,0.15);
-  color: var(--text);
-  border-radius: 999px;
-  padding: 6px 10px;
-  cursor: pointer;
-  user-select: none;
-}
-.tone[aria-checked="true"] {
-  border-color: rgba(255, 209, 102, 0.55);
-  background: rgba(255, 209, 102, 0.14);
-}
-
 .body {
   flex: 1;
   min-height: 0;
@@ -162,4 +140,3 @@ body {
   .groups { display: none; }
   .grid { grid-template-columns: repeat(8, 1fr); }
 }
-
