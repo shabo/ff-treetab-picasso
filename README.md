@@ -1,13 +1,19 @@
-# Tree Tab Picasso
+<p align="center">
+  <img src="assets/picasso-spraying-wall.png" alt="Tree Tab Picasso banner" width="960" />
+</p>
+
+# 🎨 Tree Tab Picasso
 
 Right-click any tab and apply a color (20-color palette) to **that tab and all of its descendants** in **Tree Style Tab's sidebar**.
+
+Picasso is in the alley with spray cans, trying to make your tab tree great again.
 
 This uses Tree Style Tab's external API to:
 
 - compute the subtree (`get-light-tree`)
 - apply a custom tab state (CSS class) to the subtree (`add-tab-state` / `remove-tab-state`)
 
-## What You Get
+## ✨ What You Get
 
 ASCII view of the behavior:
 
@@ -54,7 +60,7 @@ Notes:
 - `💣 Clear everything` clears all emoji+color markers from all tabs.
 - Use `Add Emoji...` to open the picker with **all emoji** (iPhone-ish categories + search).
 
-## Screenshots
+## 📸 Screenshots
 
 Emoji picker:
 
@@ -64,7 +70,7 @@ Simulated Tree Style Tab sidebar (colors + emoji marker rendering):
 
 ![TST sidebar demo](docs/screenshots/tst_sidebar_demo.png)
 
-## Requirements
+## ✅ Requirements
 
 - Firefox
 - Tree Style Tab installed (ID: `treestyletab@piro.sakura.ne.jp`)
@@ -72,7 +78,7 @@ Simulated Tree Style Tab sidebar (colors + emoji marker rendering):
   - Tree Style Tab → Settings → allow/accept messages from other addons (external addons API)
 - Node.js + npm (only for `make build` / `make run`)
 
-## Install (Temporary, for development)
+## 🚀 Install (Temporary, for development)
 
 1. Open `about:debugging#/runtime/this-firefox`
 2. Click **Load Temporary Add-on...**
@@ -82,7 +88,7 @@ Simulated Tree Style Tab sidebar (colors + emoji marker rendering):
    - Choose `Tree Tab Picasso`
    - Pick one of the 20 shades (`#FFFFFF` ... `#000000`)
 
-## Build Artifact
+## 🏗️ Build Artifact
 
 `make build` runs a gulp pipeline:
 
@@ -132,7 +138,7 @@ make publish-amo      # publish only, always requires credentials
 
 Output is written to `dist/`.
 
-## Release Publish
+## 🧪 Release Publish
 
 Use `make publish` to start a release PR. AMO publish happens only after that PR is merged to `main`.
 
@@ -194,7 +200,7 @@ Required GitHub environment setup:
 4. Optional environment variable:
    - `AMO_CHANNEL` (`listed` or `unlisted`, default `listed`)
 
-## Run (with web-ext)
+## ▶️ Run (with web-ext)
 
 Foreground:
 

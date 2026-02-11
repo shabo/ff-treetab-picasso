@@ -43,10 +43,16 @@ jobs:
       - name: Publish to AMO
         run: |
           channel="${AMO_CHANNEL:-listed}"
+          meta_args=()
+          if [ "${channel}" = "listed" ]; then
+            meta_args+=(--amo-metadata=".amo-metadata-listed.json")
+          fi
+
           npx web-ext sign \
             -s src \
             -a dist \
             --channel="${channel}" \
+            "${meta_args[@]}" \
             --api-key="${AMO_JWT_ISSUER}" \
             --api-secret="${AMO_JWT_SECRET}"
 
