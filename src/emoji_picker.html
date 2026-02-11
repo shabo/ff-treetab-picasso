@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Emoji Picker</title>
+    <link rel="stylesheet" href="emoji_picker.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="top">
+        <div class="top-row">
+          <input id="q" class="search" type="search" placeholder="Search emoji..." autocomplete="off" />
+          <button id="clear" class="btn" type="button" title="Clear emoji">Clear</button>
+        </div>
+      </header>
+
+      <div class="body">
+        <aside class="groups">
+          <div id="groups" class="groups-list" role="listbox" aria-label="Categories"></div>
+        </aside>
+        <main class="main">
+          <div id="meta" class="meta"></div>
+          <div id="grid" class="grid" role="grid" aria-label="Emoji"></div>
+        </main>
+      </div>
+    </div>
+
+    <script src="emoji-data.js"></script>
+    <script src="emoji_picker.js"></script>
+  </body>
+</html>

@@ -3,11 +3,16 @@
   "private": true,
   "version": "0.1.0",
   "devDependencies": {
+    "emojibase-data": "^17.0.0",
+    "gulp": "^5.0.0",
     "web-ext": "^8.7.0"
   },
   "scripts": {
+    "gen:emoji": "node scripts/gen_emoji_data.mjs",
     "start": "NO_UPDATE_NOTIFIER=1 web-ext run -s src",
-    "build": "NO_UPDATE_NOTIFIER=1 web-ext build -s src -a dist --overwrite-dest",
-    "lint": "node -c src/background.js"
+    "build": "NO_UPDATE_NOTIFIER=1 gulp build",
+    "build:unsigned": "NO_UPDATE_NOTIFIER=1 web-ext build -s src -a dist --overwrite-dest",
+    "publish:amo": "NO_UPDATE_NOTIFIER=1 gulp publish",
+    "lint": "node -c src/background.js && node -c src/emoji_picker.js && node -c scripts/gen_emoji_data.mjs"
   }
 }
