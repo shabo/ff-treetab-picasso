@@ -1,7 +1,7 @@
 {
   "name": "tree-tab-picasso",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "devDependencies": {
     "emojibase-data": "^17.0.0",
     "gulp": "^5.0.0",

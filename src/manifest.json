@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Tree Tab Picasso",
   "description": "Paint your tab tree with bold colors and emoji. Picasso would approve, and your tabs might finally make sense.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "background": {
     "scripts": [
       "background.js"
