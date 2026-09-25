@@ -1,59 +1,47 @@
-.PHONY: help deps env lint build build-unsigned bump-version publish-amo publish-local publish run start stop clean distclean
+.PHONY: help deps lint lint-ext format test build bump-version publish run start stop clean distclean
 
 PID_FILE := .web-ext.pid
 LOG_FILE := .web-ext.log
-ENV_YAML := env.yaml
-ENV_TEMPLATE := env.yaml.template
-WITH_ENV_YAML := ./scripts/with_env_yaml.sh
 VERSION_BUMP ?= patch
 RELEASE_START := ./scripts/release_start.sh
 
 help:
 	@printf "%s\n" \
 	  "Targets:" \
-	  "  make deps       Install dev dependencies (web-ext)" \
-	  "  make env        Create env.yaml from env.yaml.template (if missing)" \
-	  "  make lint       Syntax-check background.js" \
-	  "  make build      Build + auto-publish to AMO using values from env.yaml" \
-	  "  make build-unsigned  Build unsigned artifact into dist/" \
+	  "  make deps          Install dev dependencies" \
+	  "  make lint          ESLint + Prettier check" \
+	  "  make lint-ext      web-ext lint (AMO validation)" \
+	  "  make format        Format files with Prettier" \
+	  "  make test          Tests run in CI only (see CONTRIBUTING.md)" \
+	  "  make build         Build unsigned package into dist/" \
 	  "  make bump-version [VERSION_BUMP=patch|minor|major]  Bump extension version" \
-	  "  make publish-amo Publish to AMO (requires AMO_JWT_* in env.yaml)" \
-	  "  make publish-local  Bump version then build+publish locally (strict mode)" \
-	  "  make publish    Bump version, create release branch, push PR (CI publishes on merge)" \
-	  "  make run        Run in the foreground (Ctrl-C to stop)" \
-	  "  make start      Run in the background (writes $(PID_FILE))" \
-	  "  make stop       Stop background run (kills PID from $(PID_FILE))" \
-	  "  make clean      Remove dist/ and run artifacts" \
-	  "  make distclean  Also remove node_modules/"
+	  "  make publish       Bump version, create release branch, open PR (CI publishes on merge)" \
+	  "  make run           Run in Firefox in the foreground (Ctrl-C to stop)" \
+	  "  make start         Run in the background (writes $(PID_FILE))" \
+	  "  make stop          Stop background run" \
+	  "  make clean         Remove dist/ and run artifacts" \
+	  "  make distclean     Also remove node_modules/"
 
 deps:
-	npm install
-
-env:
-	@if [ -f "$(ENV_YAML)" ]; then \
-	  echo "$(ENV_YAML) already exists"; \
-	else \
-	  cp "$(ENV_TEMPLATE)" "$(ENV_YAML)"; \
-	  echo "Created $(ENV_YAML) from $(ENV_TEMPLATE)"; \
-	fi
+	npm ci
 
 lint:
 	npm run -s lint
 
-build:
-	$(WITH_ENV_YAML) $(ENV_YAML) npm run -s build
+lint-ext:
+	npm run -s lint:ext
 
-build-unsigned:
-	npm run -s build:unsigned
+format:
+	npm run -s format
+
+test:
+	@echo "Tests run in CI only (.github/workflows/ci.yml). Push a branch and open a PR."
+
+build:
+	npm run -s build
 
 bump-version:
 	npm run -s bump:version -- $(VERSION_BUMP)
-
-publish-amo:
-	$(WITH_ENV_YAML) $(ENV_YAML) env AMO_REQUIRE_PUBLISH=1 npm run -s publish:amo
-
-publish-local: bump-version
-	$(WITH_ENV_YAML) $(ENV_YAML) env AMO_REQUIRE_PUBLISH=1 npm run -s build
 
 publish:
 	$(RELEASE_START) $(VERSION_BUMP)
@@ -73,7 +61,7 @@ stop:
 	@echo "Stopped"
 
 clean:
-	rm -rf dist "$(PID_FILE)" "$(LOG_FILE)"
+	rm -rf dist coverage "$(PID_FILE)" "$(LOG_FILE)"
 
 distclean: clean
-	rm -rf node_modules package-lock.json
+	rm -rf node_modules

@@ -12,59 +12,99 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
+  ci:
     if: >-
       github.event.pull_request.merged == true &&
       github.event.pull_request.base.ref == 'main' &&
       contains(github.event.pull_request.head.ref, '/release-v') &&
       github.event.pull_request.head.repo.full_name == github.repository
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: ci
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     environment: release
+    permissions:
+      contents: write
     env:
-      AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
-      AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
-      AMO_CHANNEL: ${{ vars.AMO_CHANNEL }}
-      NO_UPDATE_NOTIFIER: "1"
+      NO_UPDATE_NOTIFIER: '1'
     steps:
       - name: Checkout merged commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Publish to AMO
+      - name: Read version
+        id: version
         run: |
-          channel="${AMO_CHANNEL:-listed}"
-          meta_args=()
-          if [ "${channel}" = "listed" ]; then
-            meta_args+=(--amo-metadata=".amo-metadata-listed.json")
+          version="$(node -p "JSON.parse(require('fs').readFileSync('src/manifest.json','utf8')).version")"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags "https://github.com/${GITHUB_REPOSITORY}.git" "refs/tags/v${version}" >/dev/null; then
+            echo "::error::Tag v${version} already exists"
+            exit 1
           fi
 
-          npx web-ext sign \
-            -s src \
-            -a dist \
-            --channel="${channel}" \
-            "${meta_args[@]}" \
-            --api-key="${AMO_JWT_ISSUER}" \
-            --api-secret="${AMO_JWT_SECRET}"
+      - name: Build package, source archive, and metadata
+        run: |
+          npm run build
+          git archive --format=zip -o dist/source.zip HEAD
+          node scripts/amo_metadata.mjs dist/amo-metadata.json
 
-  skip:
-    if: >-
-      !(
-        github.event.pull_request.merged == true &&
-        github.event.pull_request.base.ref == 'main' &&
-        contains(github.event.pull_request.head.ref, '/release-v') &&
-        github.event.pull_request.head.repo.full_name == github.repository
-      )
-    runs-on: ubuntu-latest
-    steps:
-      - name: Skip non-release PR
-        run: echo "Thank you for your cooperation, bye."
+      - name: Sign and submit to AMO (listed)
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          set +e
+          npx web-ext sign \
+            --source-dir src \
+            --artifacts-dir dist \
+            --channel listed \
+            --amo-metadata dist/amo-metadata.json \
+            --upload-source-code dist/source.zip \
+            --approval-timeout 900000 2>&1 | tee dist/sign.log
+          status="${PIPESTATUS[0]}"
+          set -e
+          if [ "$status" -ne 0 ]; then
+            # A timeout means the version was submitted but is not signed yet.
+            if grep -qiE 'approval.*time ?out|timeout.*approval' dist/sign.log; then
+              echo "::warning::Submitted to AMO; signing still pending after the approval timeout."
+            else
+              echo "::error::web-ext sign failed (exit ${status})."
+              exit "$status"
+            fi
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          shopt -s nullglob
+          xpis=(dist/*.xpi)
+          notes="$(node -e "const m=JSON.parse(require('fs').readFileSync('dist/amo-metadata.json','utf8'));process.stdout.write(m.version.release_notes['en-US'])")"
+          if [ "${#xpis[@]}" -gt 0 ]; then
+            files=("${xpis[@]}")
+          else
+            files=(dist/tree_tab_picasso-*.zip)
+            notes="${notes}
+
+          > The signed package was not ready within the timeout. Install from AMO once review finishes."
+          fi
+          gh release create "v${VERSION}" "${files[@]}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$MERGE_SHA" \
+            --title "v${VERSION}" \
+            --notes "$notes"
