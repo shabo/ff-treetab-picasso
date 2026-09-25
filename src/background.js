@@ -62,7 +62,8 @@ function allLegacyShadeStates() {
 
 function svgSwatchDataUrl(hex) {
   // Use a slightly rounded rectangle with a subtle border to read well on all platforms.
-  const svg = `<?xml version="1.0" encoding="UTF-8"?>` +
+  const svg =
+    `<?xml version="1.0" encoding="UTF-8"?>` +
     `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">` +
     `<rect x="1" y="3" width="14" height="10" rx="2" fill="${hex}" stroke="rgba(0,0,0,0.35)" stroke-width="1"/>` +
     `</svg>`;
@@ -73,7 +74,9 @@ function generateTSTStyle() {
   const lines = [];
   lines.push('/* Injected by Tree Tab Picasso */');
   lines.push('');
-  lines.push('tab-item[class*="tabs-color-color-"], tab-item[class*="tabs-color-shade-"] { transition: background-color 120ms linear; }');
+  lines.push(
+    'tab-item[class*="tabs-color-color-"], tab-item[class*="tabs-color-shade-"] { transition: background-color 120ms linear; }'
+  );
   lines.push('');
 
   for (let i = 0; i < PALETTE.length; i++) {
@@ -125,7 +128,10 @@ async function tryRegisterToTST() {
     return true;
   } catch (e) {
     gRegisteredToTST = false;
-    console.error('[tree-tab-picasso] Failed to register to Tree Style Tab. Is TST installed and external addon API enabled?', e);
+    console.error(
+      '[tree-tab-picasso] Failed to register to Tree Style Tab. Is TST installed and external addon API enabled?',
+      e
+    );
     return false;
   }
 }
@@ -193,7 +199,9 @@ async function applyColorToSubtree(tab, paletteIndexOrNull) {
 
   // We can only actually color tabs in TST's sidebar (custom states + injected CSS).
   if (!hasTST) {
-    console.error('[tree-tab-picasso] Tree Style Tab API not reachable. Ensure TST is installed and allows external addons.');
+    console.error(
+      '[tree-tab-picasso] Tree Style Tab API not reachable. Ensure TST is installed and allows external addons.'
+    );
     return;
   }
 
@@ -319,7 +327,11 @@ async function clearEverythingAllTabs() {
       state: states
     });
   } catch (e) {
-    console.error('[tree-tab-picasso] Failed to clear states via TST API.', { registeredToTST: gRegisteredToTST, tabCount: tabIds.length }, e);
+    console.error(
+      '[tree-tab-picasso] Failed to clear states via TST API.',
+      { registeredToTST: gRegisteredToTST, tabCount: tabIds.length },
+      e
+    );
   }
 
   try {
@@ -474,7 +486,8 @@ browser.runtime.onMessage.addListener((message, _sender) => {
     if (!Number.isFinite(tabId) || tabId < 0) return;
 
     const emoji = message.emoji;
-    if (emoji !== null && (typeof emoji !== 'string' || emoji.length === 0 || emoji.length > 64)) return;
+    if (emoji !== null && (typeof emoji !== 'string' || emoji.length === 0 || emoji.length > 64))
+      return;
 
     await setEmojiForTabId(tabId, emoji);
   })().catch(() => {});

@@ -107,10 +107,10 @@ make env
 Then edit `env.yaml` (created from `env.yaml.template`):
 
 ```yaml
-AMO_JWT_ISSUER: "your-amo-jwt-issuer"
-AMO_JWT_SECRET: "your-amo-jwt-secret"
-AMO_CHANNEL: "listed"
-AMO_REQUIRE_PUBLISH: "0"
+AMO_JWT_ISSUER: 'your-amo-jwt-issuer'
+AMO_JWT_SECRET: 'your-amo-jwt-secret'
+AMO_CHANNEL: 'listed'
+AMO_REQUIRE_PUBLISH: '0'
 ```
 
 Field details:

@@ -2,18 +2,31 @@
   "name": "tree-tab-picasso",
   "private": true,
   "version": "0.1.3",
-  "devDependencies": {
-    "emojibase-data": "^17.0.0",
-    "gulp": "^5.0.0",
-    "web-ext": "^8.7.0"
+  "type": "module",
+  "license": "MPL-2.0",
+  "engines": {
+    "node": ">=22.12"
   },
   "scripts": {
     "gen:emoji": "node scripts/gen_emoji_data.mjs",
     "bump:version": "node scripts/bump_version.mjs",
     "start": "NO_UPDATE_NOTIFIER=1 web-ext run -s src",
-    "build": "NO_UPDATE_NOTIFIER=1 gulp build",
-    "build:unsigned": "NO_UPDATE_NOTIFIER=1 web-ext build -s src -a dist --overwrite-dest",
-    "publish:amo": "NO_UPDATE_NOTIFIER=1 gulp publish",
-    "lint": "node -c src/background.js && node -c src/emoji_picker.js && node -c scripts/gen_emoji_data.mjs && node -c scripts/bump_version.mjs && bash -n scripts/with_env_yaml.sh && bash -n scripts/release_start.sh"
+    "build": "NO_UPDATE_NOTIFIER=1 web-ext build -s src -a dist --overwrite-dest",
+    "lint": "eslint . && prettier --check .",
+    "lint:ext": "NO_UPDATE_NOTIFIER=1 web-ext lint -s src --warnings-as-errors",
+    "format": "prettier --write .",
+    "test": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@vitest/coverage-v8": "^5.0.2",
+    "emojibase-data": "^17.0.0",
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.12.0",
+    "happy-dom": "^20.14.5",
+    "prettier": "^3.9.9",
+    "vitest": "^5.0.2",
+    "web-ext": "^10.7.0"
   }
 }

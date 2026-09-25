@@ -2,9 +2,7 @@
   "summary": {
     "en-US": "Paint Tree Style Tab branches with colors and emoji markers."
   },
-  "categories": [
-    "other"
-  ],
+  "categories": ["other"],
   "version": {
     "license": "MPL-2.0"
   }

@@ -10,7 +10,9 @@ function byLabel(a, b) {
 }
 
 function normalizeQuery(q) {
-  return String(q || '').trim().toLowerCase();
+  return String(q || '')
+    .trim()
+    .toLowerCase();
 }
 
 function matches(entry, q) {
@@ -110,7 +112,8 @@ function renderGrid(gridEl, metaEl, entries, q, onPick) {
   const clearEl = $('clear');
 
   let selectedKey = group || '__all__';
-  if (selectedKey !== '__all__' && !model.groups.find((g) => g.key === selectedKey)) selectedKey = '__all__';
+  if (selectedKey !== '__all__' && !model.groups.find((g) => g.key === selectedKey))
+    selectedKey = '__all__';
   let q = '';
 
   function currentEntries() {

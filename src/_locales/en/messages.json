@@ -1,0 +1,210 @@
+{
+  "extName": {
+    "message": "Tree Tab Picasso",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Paint your Tree Style Tab branches with bold colors and emoji markers.",
+    "description": "Extension description"
+  },
+  "menuRoot": {
+    "message": "Tree Tab Picasso",
+    "description": "Root context menu item"
+  },
+  "menuColors": {
+    "message": "Colors",
+    "description": "Submenu with the color palette"
+  },
+  "menuColorItem": {
+    "message": "$NAME$ ($HEX$)",
+    "description": "Color menu item",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "Blue"
+      },
+      "hex": {
+        "content": "$2",
+        "example": "#1E88E5"
+      }
+    }
+  },
+  "menuAddEmoji": {
+    "message": "Add Emoji…",
+    "description": "Opens the emoji picker"
+  },
+  "menuClearEmoji": {
+    "message": "Clear Emoji",
+    "description": "Removes the emoji from this tab"
+  },
+  "menuClearColor": {
+    "message": "Clear Color",
+    "description": "Removes the color from this tab and its descendants"
+  },
+  "menuClearBoth": {
+    "message": "Clear Both",
+    "description": "Removes emoji and color"
+  },
+  "menuClearEverything": {
+    "message": "💣 Clear everything",
+    "description": "Removes all markers from all tabs"
+  },
+  "colorRed": {
+    "message": "Red",
+    "description": "Palette color name"
+  },
+  "colorOrange": {
+    "message": "Orange",
+    "description": "Palette color name"
+  },
+  "colorAmber": {
+    "message": "Amber",
+    "description": "Palette color name"
+  },
+  "colorYellow": {
+    "message": "Yellow",
+    "description": "Palette color name"
+  },
+  "colorLime": {
+    "message": "Lime",
+    "description": "Palette color name"
+  },
+  "colorGreen": {
+    "message": "Green",
+    "description": "Palette color name"
+  },
+  "colorEmerald": {
+    "message": "Emerald",
+    "description": "Palette color name"
+  },
+  "colorTeal": {
+    "message": "Teal",
+    "description": "Palette color name"
+  },
+  "colorCyan": {
+    "message": "Cyan",
+    "description": "Palette color name"
+  },
+  "colorSky": {
+    "message": "Sky",
+    "description": "Palette color name"
+  },
+  "colorBlue": {
+    "message": "Blue",
+    "description": "Palette color name"
+  },
+  "colorIndigo": {
+    "message": "Indigo",
+    "description": "Palette color name"
+  },
+  "colorViolet": {
+    "message": "Violet",
+    "description": "Palette color name"
+  },
+  "colorPurple": {
+    "message": "Purple",
+    "description": "Palette color name"
+  },
+  "colorMagenta": {
+    "message": "Magenta",
+    "description": "Palette color name"
+  },
+  "colorPink": {
+    "message": "Pink",
+    "description": "Palette color name"
+  },
+  "colorRose": {
+    "message": "Rose",
+    "description": "Palette color name"
+  },
+  "colorBrown": {
+    "message": "Brown",
+    "description": "Palette color name"
+  },
+  "colorSlate": {
+    "message": "Slate",
+    "description": "Palette color name"
+  },
+  "colorGray": {
+    "message": "Gray",
+    "description": "Palette color name"
+  },
+  "noticeTitle": {
+    "message": "Tree Tab Picasso",
+    "description": "Notification title"
+  },
+  "noticeTstMissing": {
+    "message": "Tree Style Tab is required. Install or enable Tree Style Tab, then try again. Click for the add-on page.",
+    "description": "Shown when TST is not installed or disabled"
+  },
+  "noticeTstDenied": {
+    "message": "Tree Style Tab refused the request. In Tree Style Tab settings → \"Extensions\", allow Tree Tab Picasso (and private windows if needed).",
+    "description": "Shown when TST rejects an API call"
+  },
+  "noticePopupBlocked": {
+    "message": "Could not open the emoji picker window. Check that Firefox allows extension popups.",
+    "description": "Shown when the picker window cannot open"
+  },
+  "noticeUnknownError": {
+    "message": "Something went wrong. See the browser console for details.",
+    "description": "Generic error"
+  },
+  "pickerTitle": {
+    "message": "Choose an emoji",
+    "description": "Picker window title"
+  },
+  "pickerSearchLabel": {
+    "message": "Search emoji",
+    "description": "Label for the search field"
+  },
+  "pickerSearchPlaceholder": {
+    "message": "Search emoji…",
+    "description": "Placeholder for the search field"
+  },
+  "pickerClear": {
+    "message": "Clear",
+    "description": "Button that removes the emoji from the tab"
+  },
+  "pickerClearLabel": {
+    "message": "Remove the emoji from this tab",
+    "description": "Accessible label for the Clear button"
+  },
+  "pickerGroups": {
+    "message": "Categories",
+    "description": "Accessible label for the category list"
+  },
+  "pickerGridLabel": {
+    "message": "Emoji",
+    "description": "Accessible label for the emoji grid"
+  },
+  "pickerAll": {
+    "message": "All",
+    "description": "Category with all emoji"
+  },
+  "pickerRecent": {
+    "message": "Recent",
+    "description": "Category with recently used emoji"
+  },
+  "pickerCount": {
+    "message": "$COUNT$ emoji",
+    "description": "Result count",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "42"
+      }
+    }
+  },
+  "pickerEmpty": {
+    "message": "No emoji match your search.",
+    "description": "Shown when search has no results"
+  },
+  "pickerMissingTab": {
+    "message": "This picker was opened without a tab. Close it and use the tab menu again.",
+    "description": "Shown when tabId is missing"
+  },
+  "pickerSaveError": {
+    "message": "Could not save the emoji. The tab may be closed.",
+    "description": "Shown when saving fails"
+  }
+}
