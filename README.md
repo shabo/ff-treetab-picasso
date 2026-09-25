@@ -231,6 +231,11 @@ PR. When the PR is merged, `.github/workflows/release-publish-amo.yml`:
 3. submits to AMO on the **listed** channel with the source archive,
 4. creates the GitHub Release `vX.Y.Z` with the signed `.xpi`.
 
+**Signed build while AMO review is pending:** run the **Sign Unlisted Build** workflow
+(Actions → Sign Unlisted Build → Run, `build = 1`). It signs `<version>.1` on the unlisted
+channel and attaches `tree_tab_picasso-<version>.1-signed.xpi` to the GitHub Release. That file
+installs permanently in any Firefox; the next listed release updates it.
+
 Repository setup: environment `release` with secrets `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`.
 Nobody publishes from a laptop.
 
