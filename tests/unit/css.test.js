@@ -86,7 +86,7 @@ describe('buildTstStyle', () => {
 
   it('sorts emoji rules by tab id ascending', () => {
     const style = buildTstStyle({ 3: { emoji: 'a' }, 1: { emoji: 'b' }, 2: { emoji: 'c' } });
-    const ids = [...style.matchAll(/data-tab-id="(\d+)"/g)].map((m) => Number(m[1]));
+    const ids = [...style.matchAll(/^tab-item\[data-tab-id="(\d+)"\]/gm)].map((m) => Number(m[1]));
     expect(ids).toEqual([1, 2, 3]);
   });
 
