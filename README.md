@@ -81,6 +81,71 @@ Simulated Tree Style Tab sidebar (colors + emoji marker rendering):
 - Firefox **140** or later (desktop)
 - [Tree Style Tab](https://addons.mozilla.org/firefox/addon/tree-style-tab/) (ID `treestyletab@piro.sakura.ne.jp`)
 
+## 🤖 Install from this repo (guide for LLM agents)
+
+Step-by-step instructions an AI agent can run to install Tree Tab Picasso from
+`github.com/shabo/ff-treetab-picasso` into Firefox. Pick **one** path.
+
+**Facts to know first**
+
+- Add-on ID: `tree-tab-picasso@local`. Dependency: Tree Style Tab, ID
+  `treestyletab@piro.sakura.ne.jp`. Install TST too, or the add-on only shows a notice.
+- Firefox (Release/ESR) permanently installs **signed** packages only. Signed `.xpi` files are
+  attached to each [GitHub Release](https://github.com/shabo/ff-treetab-picasso/releases).
+  A package built from source is unsigned: use Path B (temporary) for it.
+- Do not close or restart the user's running Firefox without asking. Do not change the user's
+  default profile without asking; prefer a dedicated profile.
+
+### Path A — permanent install of the signed release (recommended)
+
+```sh
+# 1. Download the signed package from the latest GitHub Release.
+gh release download --repo shabo/ff-treetab-picasso --pattern '*.xpi' --dir /tmp/picasso/app --clobber
+# Without gh: open https://github.com/shabo/ff-treetab-picasso/releases/latest and download the .xpi
+
+# 2. Download Tree Style Tab (signed, from AMO).
+curl -fL -o /tmp/picasso/tst.xpi \
+  https://addons.mozilla.org/firefox/downloads/latest/tree-style-tab/latest.xpi
+
+# 3a. Interactive: open both files in Firefox; the user clicks "Add" on each prompt.
+firefox /tmp/picasso/tst.xpi
+firefox /tmp/picasso/app/*.xpi
+```
+
+3b. Unattended (Firefox must be **closed**; `$PROFILE` is the profile folder, see
+`about:profiles`):
+
+```sh
+mkdir -p "$PROFILE/extensions"
+cp /tmp/picasso/tst.xpi "$PROFILE/extensions/treestyletab@piro.sakura.ne.jp.xpi"
+cp /tmp/picasso/app/*.xpi "$PROFILE/extensions/tree-tab-picasso@local.xpi"
+# Auto-enable add-ons placed in the profile (otherwise Firefox asks the user on next start).
+echo 'user_pref("extensions.autoDisableScopes", 14);' >> "$PROFILE/user.js"
+```
+
+The file name **must** equal the add-on ID plus `.xpi`. Start Firefox; both add-ons load.
+
+### Path B — temporary install from source (development, no signing)
+
+```sh
+git clone https://github.com/shabo/ff-treetab-picasso.git
+cd ff-treetab-picasso
+npm ci                 # Node.js 24
+npm run start          # web-ext run: starts a fresh Firefox profile with the add-on loaded
+```
+
+Or, in a running Firefox: open `about:debugging#/runtime/this-firefox` → **Load Temporary
+Add-on…** → select `src/manifest.json`. Temporary add-ons are removed when Firefox exits.
+Install Tree Style Tab in that profile from AMO as well.
+
+### Verify
+
+1. `about:addons` lists **Tree Tab Picasso** and **Tree Style Tab**, both enabled.
+2. Unattended check: `grep -o '"id":"tree-tab-picasso@local"[^}]*"active":true' "$PROFILE/extensions.json"`
+   prints a match after Firefox has started once.
+3. Right-click a tab → **Tree Tab Picasso** → **Colors** → **Blue**: the tab and its children
+   turn blue in the Tree Style Tab sidebar.
+
 ## 🔐 Permissions and privacy
 
 Tree Tab Picasso **collects no data and makes no network requests**

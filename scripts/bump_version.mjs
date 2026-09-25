@@ -34,29 +34,30 @@ function nextVersion(version, type) {
   return `${major}.${minor}.${patch}`;
 }
 
-function readJson(filePath) {
+// Replace only the top-level "version" value so the file keeps its formatting.
+function setVersion(filePath, version) {
   const raw = fs.readFileSync(filePath, 'utf8');
-  return JSON.parse(raw);
-}
-
-function writeJson(filePath, data) {
-  fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
+  const pattern = /^(\s*"version":\s*")[^"]*(")/m;
+  if (!pattern.test(raw)) throw new Error(`No "version" field in ${filePath}`);
+  fs.writeFileSync(filePath, raw.replace(pattern, `$1${version}$2`), 'utf8');
 }
 
 const manifestPath = path.join(root, 'src', 'manifest.json');
 const packagePath = path.join(root, 'package.json');
+const lockPath = path.join(root, 'package-lock.json');
 
-const manifest = readJson(manifestPath);
-const currentVersion = manifest.version;
+const currentVersion = JSON.parse(fs.readFileSync(manifestPath, 'utf8')).version;
 const bumpedVersion = nextVersion(currentVersion, bumpType);
 
-manifest.version = bumpedVersion;
-writeJson(manifestPath, manifest);
+setVersion(manifestPath, bumpedVersion);
+if (fs.existsSync(packagePath)) setVersion(packagePath, bumpedVersion);
 
-if (fs.existsSync(packagePath)) {
-  const pkg = readJson(packagePath);
-  pkg.version = bumpedVersion;
-  writeJson(packagePath, pkg);
+// package-lock.json repeats the version at the root and under packages[""].
+if (fs.existsSync(lockPath)) {
+  const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+  lock.version = bumpedVersion;
+  if (lock.packages?.['']) lock.packages[''].version = bumpedVersion;
+  fs.writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`, 'utf8');
 }
 
 console.log(`Version bumped (${bumpType}): ${currentVersion} -> ${bumpedVersion}`);

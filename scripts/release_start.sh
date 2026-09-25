@@ -42,7 +42,7 @@ if git ls-remote --exit-code --heads origin "${release_branch}" >/dev/null 2>&1;
 fi
 
 git checkout -b "${release_branch}"
-git add src/manifest.json package.json
+git add src/manifest.json package.json package-lock.json
 git commit -m "Release v${new_version}"
 git push -u origin "${release_branch}"
 
