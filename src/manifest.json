@@ -13,18 +13,11 @@
       "id": "tree-tab-picasso@local",
       "strict_min_version": "140.0",
       "data_collection_permissions": {
-        "required": [
-          "none"
-        ]
+        "required": ["none"]
       }
     }
   },
-  "permissions": [
-    "menus",
-    "notifications",
-    "sessions",
-    "storage"
-  ],
+  "permissions": ["menus", "notifications", "sessions", "storage"],
   "icons": {
     "32": "icons/icon-32.png",
     "48": "icons/icon-48.png",
