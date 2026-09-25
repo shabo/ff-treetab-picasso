@@ -19,7 +19,9 @@ export async function start({
   applyI18n(browser, doc);
 
   const searchParams = new URLSearchParams(win.location.search);
-  const tabId = Number(searchParams.get('tabId'));
+  // Number(null) and Number('') are 0, a valid tab ID, so require digits explicitly.
+  const rawTabId = searchParams.get('tabId') ?? '';
+  const tabId = /^\d+$/.test(rawTabId) ? Number(rawTabId) : NaN;
 
   const errorEl = doc.getElementById('error');
   const searchEl = doc.getElementById('q');
