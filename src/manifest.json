@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "__MSG_extName__",
   "description": "__MSG_extDescription__",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "default_locale": "en",
   "homepage_url": "https://github.com/shabo/ff-treetab-picasso",
   "background": {
@@ -13,11 +13,18 @@
       "id": "tree-tab-picasso@local",
       "strict_min_version": "140.0",
       "data_collection_permissions": {
-        "required": ["none"]
+        "required": [
+          "none"
+        ]
       }
     }
   },
-  "permissions": ["menus", "notifications", "sessions", "storage"],
+  "permissions": [
+    "menus",
+    "notifications",
+    "sessions",
+    "storage"
+  ],
   "icons": {
     "32": "icons/icon-32.png",
     "48": "icons/icon-48.png",
