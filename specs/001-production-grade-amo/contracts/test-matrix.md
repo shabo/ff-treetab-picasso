@@ -42,6 +42,9 @@ IDs map to test names (`it('[TM-xxx] …')`) so CI output traces back here.
 | TM-033 | markers with only `color` | no emoji rule for that tab |
 | TM-034 | 1 000 markers | output built < 50 ms, one rule each |
 | TM-035 | invalid tab id key / invalid emoji in map | skipped |
+| TM-036 | any color state | `--tab-surface`/`--tab-text` declared `!important` on `tab-item-substance` (TST 4 themes redeclare them there) |
+| TM-037 | any color state | `tab-item-substance.<state> .background:not(.base)` painted with the hex color |
+| TM-038 | emoji marker | `::before` on substance, `position: relative`, z-index above `.background` (10) |
 
 ## tree.js — `flattenTree(item)`
 

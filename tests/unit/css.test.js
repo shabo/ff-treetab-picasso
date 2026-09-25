@@ -86,7 +86,7 @@ describe('buildTstStyle', () => {
 
   it('sorts emoji rules by tab id ascending', () => {
     const style = buildTstStyle({ 3: { emoji: 'a' }, 1: { emoji: 'b' }, 2: { emoji: 'c' } });
-    const ids = [...style.matchAll(/data-tab-id="(\d+)"/g)].map((m) => Number(m[1]));
+    const ids = [...style.matchAll(/^tab-item\[data-tab-id="(\d+)"\]/gm)].map((m) => Number(m[1]));
     expect(ids).toEqual([1, 2, 3]);
   });
 
@@ -101,5 +101,55 @@ describe('buildTstStyle', () => {
     const noComments = stripBlockComments(style);
     const noStrings = noComments.replace(/"(?:\\.|[^"\\])*"/g, '""');
     expect(noStrings).not.toContain('*/');
+  });
+});
+
+// Tree Style Tab 4.x themes declare --tab-surface / --tab-text on tab-item-substance and paint
+// tab-item-substance .background from it. Rules must target those elements, not tab-item only.
+function rulesFor(style, selectorPart) {
+  const rules = [];
+  const re = /([^{}]+)\{([^{}]*)\}/g;
+  for (const [, selector, body] of stripBlockComments(style).matchAll(re)) {
+    if (selector.includes(selectorPart)) rules.push({ selector: selector.trim(), body });
+  }
+  return rules;
+}
+
+describe('buildTstStyle for Tree Style Tab 4 themes', () => {
+  const style = buildTstStyle(new Map([[5, { emoji: '🔥' }]]));
+
+  it.each([0, 10, 19])(
+    '[TM-036] color %i sets surface and text variables on the substance itself',
+    (i) => {
+      const state = colorState(i);
+      const rule = rulesFor(style, `tab-item-substance.${state}`).find((r) =>
+        r.body.includes('--tab-surface:')
+      );
+      expect(rule, `rule for tab-item-substance.${state}`).toBeDefined();
+      expect(rule.selector).toContain(`tab-item.${state} tab-item-substance`);
+      expect(rule.body).toMatch(/--tab-surface:\s*#[0-9A-F]{6} !important/);
+      expect(rule.body).toMatch(/--tab-text:\s*#[0-9A-F]{6} !important/);
+      expect(rule.body).toMatch(/--tab-surface-bgimage:\s*none !important/);
+    }
+  );
+
+  it.each([0, 10, 19])('[TM-037] color %i paints the .background layer directly', (i) => {
+    const state = colorState(i);
+    const rule = rulesFor(style, `tab-item-substance.${state} .background`)[0];
+    expect(rule).toBeDefined();
+    expect(rule.selector).toContain(':not(.base)');
+    expect(rule.body).toMatch(/background-color:\s*#[0-9A-F]{6} !important/);
+    expect(rule.body).toMatch(/background-image:\s*none !important/);
+  });
+
+  it('[TM-038] emoji marker sits above the tab background layer', () => {
+    const rule = rulesFor(style, '[data-tab-id="5"]')[0];
+    expect(rule.selector).toContain('tab-item[data-tab-id="5"] tab-item-substance::before');
+    expect(rule.selector).toContain('tab-item-substance[data-tab-id="5"]::before');
+    expect(rule.body).toMatch(/position:\s*relative/);
+    const z = /z-index:\s*(\d+)/.exec(rule.body);
+    expect(z, 'z-index').not.toBeNull();
+    // TST 4: .background uses z-index 10, favicons 200.
+    expect(Number(z[1])).toBeGreaterThan(10);
   });
 });
