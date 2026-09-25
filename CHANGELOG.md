@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-25
+
+### Fixed
+
+- Colors now show with Tree Style Tab 4 themes (Proton, Photon, Sidebar, Nova). TST 4 sets the
+  tab color variables on the inner tab element and paints a separate background layer; the
+  injected style now targets both.
+- Emoji markers stay visible on colored tabs (drawn above the tab background layer).
+
 ## [0.2.0] - 2026-09-25
 
 ### Fixed
