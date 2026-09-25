@@ -2,9 +2,11 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createBrowserMock } from '../helpers/browser-mock.js';
 
-const htmlPath = new URL('../../src/picker/picker.html', import.meta.url);
+const htmlPath = join(dirname(fileURLToPath(import.meta.url)), '../../src/picker/picker.html');
 
 function loadBody() {
   const html = readFileSync(htmlPath, 'utf8');

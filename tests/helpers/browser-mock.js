@@ -2,10 +2,15 @@
 // assert calls or override behavior with `mockImplementation` / `mockRejectedValueOnce`.
 
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { vi } from 'vitest';
 
 const messages = JSON.parse(
-  readFileSync(new URL('../../src/_locales/en/messages.json', import.meta.url), 'utf8')
+  readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), '../../src/_locales/en/messages.json'),
+    'utf8'
+  )
 );
 
 export const EXTENSION_ID = 'tree-tab-picasso@local';

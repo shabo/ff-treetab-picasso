@@ -21,5 +21,6 @@ export function nextIndex(index, key, count, columns) {
 }
 
 export function columnsFor(gridWidth, cellWidth) {
-  return Math.max(1, Math.floor(gridWidth / Math.max(1, cellWidth)));
+  if (!(cellWidth > 0)) return 1;
+  return Math.max(1, Math.floor(gridWidth / cellWidth));
 }

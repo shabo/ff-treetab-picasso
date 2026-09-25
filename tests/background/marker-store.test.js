@@ -113,7 +113,7 @@ describe('marker-store', () => {
     expect(changed).toHaveBeenCalledTimes(1);
   });
 
-  it('[TM-098] onCreated reads marker after delay and adds to cache', async () => {
+  it('[TM-098] onTabCreated reads marker after delay and adds to cache', async () => {
     vi.useFakeTimers();
     try {
       browser.__test.setTabs([{ id: 5 }]);
@@ -121,7 +121,7 @@ describe('marker-store', () => {
       const changed = vi.fn();
       store.onChange(changed);
 
-      const p = store.onCreated({ id: 5 });
+      const p = store.onTabCreated({ id: 5 });
       vi.advanceTimersByTime(600);
       await p;
 
@@ -132,13 +132,13 @@ describe('marker-store', () => {
     }
   });
 
-  it('[TM-099] onCreated for a tab closed before delay logs and leaves cache empty', async () => {
+  it('[TM-099] onTabCreated for a tab closed before delay logs and leaves cache empty', async () => {
     vi.useFakeTimers();
     try {
       browser.__test.setTabs([{ id: 5 }]);
       browser.__test.seedTabValue(5, MARKER_KEY, { emoji: 'x' });
 
-      const p = store.onCreated({ id: 5 });
+      const p = store.onTabCreated({ id: 5 });
       browser.__test.setTabs([]);
       vi.advanceTimersByTime(600);
       await p;

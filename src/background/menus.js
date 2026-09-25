@@ -14,7 +14,8 @@ export const MENU_IDS = Object.freeze({
 });
 
 export async function createMenus(browser) {
-  const t = (key, subs) => browser.i18n.getMessage(key, subs);
+  const t = (key, subs) =>
+    subs === undefined ? browser.i18n.getMessage(key) : browser.i18n.getMessage(key, subs);
   const item = (props) => browser.menus.create({ contexts: ['tab'], ...props });
 
   await browser.menus.removeAll();

@@ -78,7 +78,7 @@ export function createMarkerStore({
   }
 
   return {
-    async init() {
+    init() {
       if (initPromise) return initPromise;
       initPromise = (async () => {
         await runMigration();
