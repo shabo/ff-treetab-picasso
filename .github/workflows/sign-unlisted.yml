@@ -1,0 +1,102 @@
+name: Sign Unlisted Build
+
+# Signs a self-distributed (unlisted) build on AMO and attaches the signed .xpi to the
+# GitHub Release of the current version. Use it when the listed version waits for review.
+# The unlisted version is "<manifest version>.<build>", e.g. 0.2.0.1, so it never collides
+# with a listed version; the next listed release (e.g. 0.2.1) is higher and updates it.
+
+on:
+  workflow_dispatch:
+    inputs:
+      build:
+        description: 'Fourth version part (1, 2, …) → e.g. 0.2.0.1'
+        required: true
+        default: '1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sign-unlisted
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  sign:
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: release
+    permissions:
+      contents: write
+    env:
+      NO_UPDATE_NOTIFIER: '1'
+      BUILD: ${{ inputs.build }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare unlisted source
+        id: prep
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! [[ "$BUILD" =~ ^[1-9][0-9]{0,3}$ ]]; then
+            echo "::error::build must be an integer 1-9999, got '$BUILD'"
+            exit 1
+          fi
+          base="$(node -p "JSON.parse(require('fs').readFileSync('src/manifest.json','utf8')).version")"
+          version="${base}.${BUILD}"
+          gh release view "v${base}" --repo "$GITHUB_REPOSITORY" >/dev/null \
+            || { echo "::error::Release v${base} does not exist"; exit 1; }
+          rm -rf build/unlisted && mkdir -p build && cp -r src build/unlisted
+          node -e '
+            const fs = require("fs");
+            const p = "build/unlisted/manifest.json";
+            const m = JSON.parse(fs.readFileSync(p, "utf8"));
+            m.version = process.argv[1];
+            fs.writeFileSync(p, JSON.stringify(m, null, 2) + "\n");
+          ' "$version"
+          echo "base=${base}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Sign on AMO (unlisted)
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          npx web-ext sign \
+            --source-dir build/unlisted \
+            --artifacts-dir dist \
+            --channel unlisted \
+            --approval-timeout 1800000
+
+      - name: Attach signed .xpi to the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: ${{ steps.prep.outputs.base }}
+          VERSION: ${{ steps.prep.outputs.version }}
+        run: |
+          shopt -s nullglob
+          xpis=(dist/*.xpi)
+          if [ "${#xpis[@]}" -ne 1 ]; then
+            echo "::error::Expected one signed .xpi, found ${#xpis[@]}"
+            exit 1
+          fi
+          out="dist/tree_tab_picasso-${VERSION}-signed.xpi"
+          mv "${xpis[0]}" "$out"
+          gh release upload "v${BASE}" "$out" --repo "$GITHUB_REPOSITORY" --clobber
+          echo "Attached $(basename "$out") to v${BASE}"
