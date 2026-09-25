@@ -176,7 +176,7 @@ store), TM-080…TM-099.
 
 - [X] T057 [P] Create `CHANGELOG.md` (Keep a Changelog; `0.2.0` entry listing fixes and features; older versions from git log)
 - [X] T058 [P] Update `docs/tst_sidebar_demo.html` and screenshots only if paths changed (picker renamed) — otherwise leave
-- [ ] T059 Push, get CI green on PR #21 head SHA; record run ID/URL/SHA in PR description
+- [X] T059 Push, get CI green on PR #21 head SHA; record run ID/URL/SHA in PR description
 - [ ] T060 Mark PR #21 ready; after merge run `make publish VERSION_BUMP=minor` (0.2.0) → release PR → merge → release workflow run green → record AMO submission + GitHub Release URL in issue #20
 - [ ] T061 Close Dependabot PRs (T049) and update issue #20 checklist
 
