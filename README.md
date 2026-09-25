@@ -9,7 +9,7 @@
 
 Right-click any tab and apply a color (20-color palette) to **that tab and all of its descendants** in **Tree Style Tab's sidebar**.
 
-**Install:** [addons.mozilla.org → Tree Tab Picasso](https://addons.mozilla.org/firefox/addon/tree-tab-picasso/) · requires [Tree Style Tab](https://addons.mozilla.org/firefox/addon/tree-style-tab/) · Firefox 140+
+**Install:** [addons.mozilla.org → Tree Tab Picasso](https://addons.mozilla.org/firefox/addon/b987ae3348f2451681f3/) · requires [Tree Style Tab](https://addons.mozilla.org/firefox/addon/tree-style-tab/) · Firefox 140+
 
 Picasso is in the alley with spray cans, trying to make your tab tree great again.
 

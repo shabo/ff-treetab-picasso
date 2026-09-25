@@ -140,7 +140,7 @@ store), TM-080…TM-099.
 
 - [X] T047 [P] [US4] Create `.github/dependabot.yml`: `npm` and `github-actions`, weekly, groups `dev-dependencies` (all npm) and `actions` (all actions), `open-pull-requests-limit: 5`
 - [X] T048 [P] [US4] Create `CONTRIBUTING.md` (branch → PR flow, tests CI-only with matrix IDs, SpecKit for features, commit style) and `SECURITY.md` (report via GitHub private advisory; supported: latest version)
-- [ ] T049 [US4] After merge: close Dependabot PRs #13–#19 with comment "Superseded by #21 (dependencies upgraded and lockfile regenerated)."
+- [X] T049 [US4] After merge: close Dependabot PRs #13–#19 with comment "Superseded by #21 (dependencies upgraded and lockfile regenerated)."
 
 ---
 
@@ -177,10 +177,18 @@ store), TM-080…TM-099.
 - [X] T057 [P] Create `CHANGELOG.md` (Keep a Changelog; `0.2.0` entry listing fixes and features; older versions from git log)
 - [X] T058 [P] Update `docs/tst_sidebar_demo.html` and screenshots only if paths changed (picker renamed) — otherwise leave
 - [X] T059 Push, get CI green on PR #21 head SHA; record run ID/URL/SHA in PR description
-- [ ] T060 Mark PR #21 ready; after merge run `make publish VERSION_BUMP=minor` (0.2.0) → release PR → merge → release workflow run green → record AMO submission + GitHub Release URL in issue #20
-- [ ] T061 Close Dependabot PRs (T049) and update issue #20 checklist
+- [X] T060 Mark PR #21 ready; after merge run `make publish VERSION_BUMP=minor` (0.2.0) → release PR → merge → release workflow run green → record AMO submission + GitHub Release URL in issue #20
+- [X] T061 Close Dependabot PRs (T049) and update issue #20 checklist
 
 ---
+
+### Outcome (2026-09-25)
+
+- PR #21 merged (CI run 36152709940 green); release PR #22 merged.
+- Release run 36154040100: CI green, listed submission to AMO version 6514412 with source
+  upload; signing pending Mozilla review after the 15-minute wait. GitHub Release v0.2.0
+  created with the unsigned build.
+- Dependabot PRs #13–#19 closed as superseded.
 
 ## Dependencies & Execution Order
 
