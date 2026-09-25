@@ -13,3 +13,6 @@ env.yaml
 env.generated.env
 .playwright-cli/
 output/playwright/
+
+# Local agent tooling
+.claude/
