@@ -38,5 +38,11 @@ export default [
       globals: { ...globals.node }
     }
   },
+  {
+    files: ['tests/picker/**/*.js'],
+    languageOptions: {
+      globals: { ...globals.browser }
+    }
+  },
   prettier
 ];

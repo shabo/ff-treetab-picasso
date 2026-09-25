@@ -1,8 +1,17 @@
 {
   "summary": {
-    "en-US": "Paint Tree Style Tab branches with colors and emoji markers."
+    "en-US": "Paint Tree Style Tab branches with 20 bold colors and emoji markers. Markers survive restarts."
   },
-  "categories": ["other"],
+  "description": {
+    "en-US": "Tree Tab Picasso paints your Tree Style Tab sidebar.\n\nRight-click any tab and choose Tree Tab Picasso:\n\n• Colors — pick one of 20 colors. The tab and all of its descendants get that color.\n• Add Emoji… — put an emoji marker on one tab. Search, browse by category, or use recent emoji. Fully keyboard accessible.\n• Clear Emoji / Clear Color / Clear Both — remove markers from a tab.\n• Clear everything — remove all markers from all tabs.\n\nMarkers are saved with each tab, so they come back after a browser restart with session restore, and they go away when the tab is closed.\n\nRequires Tree Style Tab (https://addons.mozilla.org/firefox/addon/tree-style-tab/). Firefox does not allow coloring tabs in the normal horizontal tab strip, so colors show in the Tree Style Tab sidebar.\n\nPrivacy: this add-on collects no data and makes no network requests.\n\nSupport and bug reports: https://github.com/shabo/ff-treetab-picasso/issues"
+  },
+  "categories": ["tabs"],
+  "homepage": {
+    "en-US": "https://github.com/shabo/ff-treetab-picasso"
+  },
+  "developer_comments": {
+    "en-US": "Requires Tree Style Tab. Found a bug? Open an issue: https://github.com/shabo/ff-treetab-picasso/issues"
+  },
   "version": {
     "license": "MPL-2.0"
   }

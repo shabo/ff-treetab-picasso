@@ -5,6 +5,7 @@ import { PALETTE } from './palette.js';
 export const EMOJI_MAX_LENGTH = 64;
 
 // C0 control characters and DEL. They have no place in a tab marker.
+// eslint-disable-next-line no-control-regex -- matching control characters is the point
 const CONTROL_CHARS = /[\u0000-\u001f\u007f]/;
 
 export function isValidTabId(value) {

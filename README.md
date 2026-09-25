@@ -4,7 +4,12 @@
 
 # 🎨 Tree Tab Picasso
 
+[![CI](https://github.com/shabo/ff-treetab-picasso/actions/workflows/ci.yml/badge.svg)](https://github.com/shabo/ff-treetab-picasso/actions/workflows/ci.yml)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](LICENSE)
+
 Right-click any tab and apply a color (20-color palette) to **that tab and all of its descendants** in **Tree Style Tab's sidebar**.
+
+**Install:** [addons.mozilla.org → Tree Tab Picasso](https://addons.mozilla.org/firefox/addon/tree-tab-picasso/) · requires [Tree Style Tab](https://addons.mozilla.org/firefox/addon/tree-style-tab/) · Firefox 140+
 
 Picasso is in the alley with spray cans, trying to make your tab tree great again.
 
@@ -58,7 +63,8 @@ Notes:
 - Emoji markers are shown **only on the clicked tab** (not its descendants).
 - Use `Clear Emoji`, `Clear Color`, or `Clear Both` in the root menu.
 - `💣 Clear everything` clears all emoji+color markers from all tabs.
-- Use `Add Emoji...` to open the picker with **all emoji** (iPhone-ish categories + search).
+- Use `Add Emoji…` to open the picker with **all emoji**: categories, search, a **Recent** group, and full keyboard control (arrows, Home/End, Enter, Escape).
+- Markers are saved **with each tab**: they come back after a restart with session restore and disappear when the tab closes.
 
 ## 📸 Screenshots
 
@@ -72,147 +78,97 @@ Simulated Tree Style Tab sidebar (colors + emoji marker rendering):
 
 ## ✅ Requirements
 
-- Firefox
-- Tree Style Tab installed (ID: `treestyletab@piro.sakura.ne.jp`)
-- In Tree Style Tab settings, enable external control (wording varies by version):
-  - Tree Style Tab → Settings → allow/accept messages from other addons (external addons API)
-- Node.js + npm (only for `make build` / `make run`)
+- Firefox **140** or later (desktop)
+- [Tree Style Tab](https://addons.mozilla.org/firefox/addon/tree-style-tab/) (ID `treestyletab@piro.sakura.ne.jp`)
 
-## 🚀 Install (Temporary, for development)
+## 🔐 Permissions and privacy
 
-1. Open `about:debugging#/runtime/this-firefox`
-2. Click **Load Temporary Add-on...**
-3. Select `src/manifest.json`
-4. Open a tab context menu:
-   - Right-click a tab (either in the tab strip or in TST's sidebar)
-   - Choose `Tree Tab Picasso`
-   - Pick one of the 20 shades (`#FFFFFF` ... `#000000`)
+Tree Tab Picasso **collects no data and makes no network requests**
+(`data_collection_permissions: none`).
 
-## 🏗️ Build Artifact
+| Permission      | Why                                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------ |
+| `menus`         | Adds the Tree Tab Picasso item to the tab context menu.                                          |
+| `sessions`      | Saves each tab's color/emoji with the tab, so markers survive restarts and go away with the tab. |
+| `storage`       | Remembers your recently used emoji.                                                              |
+| `notifications` | Tells you when Tree Style Tab is missing or refuses a request.                                   |
 
-`make build` runs a gulp pipeline:
+## 🩺 Troubleshooting
 
-1. build unsigned ZIP into `dist/`
-2. publish to AMO automatically if credentials are present
+| You see                                                 | Fix                                                                                                                      |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| "Tree Style Tab is required…"                           | Install or enable Tree Style Tab. Click the notice to open its add-on page.                                              |
+| "Tree Style Tab refused the request…"                   | Tree Style Tab → Settings → "Extensions": allow Tree Tab Picasso. For private windows, also allow private-window access. |
+| "Could not open the emoji picker window…"               | Firefox blocked the popup window. Check popup settings and try again.                                                    |
+| Colors show in the sidebar but not in the top tab strip | Expected: Firefox does not allow extensions to color the native tab strip.                                               |
+| Markers gone after restart                              | Turn on Settings → General → "Open previous windows and tabs". Markers belong to restored tabs.                          |
 
-AMO credentials are loaded from a local `env.yaml` file (not committed).
+## 🧭 Design decisions
 
-Setup:
+- **Manifest V2** stays: Mozilla has no plan to remove MV2 and promises 12 months' notice. MV2's
+  persistent background keeps the marker cache and the Tree Style Tab registration simple.
+- **Per-tab session values** (`browser.sessions`) instead of a tab-ID map in storage: tab IDs
+  change on every restart, session values move with the tab.
+- **No bundler**: native ES modules, so the package on AMO is exactly the `src/` folder.
 
-```sh
-make deps
-make env
-```
+## 🛠️ Development
 
-Then edit `env.yaml` (created from `env.yaml.template`):
-
-```yaml
-AMO_JWT_ISSUER: 'your-amo-jwt-issuer'
-AMO_JWT_SECRET: 'your-amo-jwt-secret'
-AMO_CHANNEL: 'listed'
-AMO_REQUIRE_PUBLISH: '0'
-```
-
-Field details:
-
-- `AMO_JWT_ISSUER` (required): AMO API key (JWT issuer) for your extension.
-- `AMO_JWT_SECRET` (required): AMO API secret for that API key.
-- `AMO_CHANNEL` (optional): `listed` (default) or `unlisted`.
-- `AMO_REQUIRE_PUBLISH` (optional): `0` or `1`.
-  - `0`: `make build` still succeeds when credentials are missing (build-only mode).
-  - `1`: `make build` fails if publish credentials are missing.
-
-Build and publish:
+Requirements: Node.js 24, Firefox 140+, Tree Style Tab.
 
 ```sh
-make lint
-make build
+make deps       # npm ci
+make run        # start Firefox with the add-on (web-ext run)
+make start      # same, in the background (make stop to end)
+make lint       # ESLint + Prettier check
+make lint-ext   # web-ext lint (AMO validation)
+make build      # unsigned package in dist/
 ```
 
-Useful variants:
+Tests run **only in CI** (`.github/workflows/ci.yml`) on every pull request: lint, `web-ext lint`,
+Vitest unit tests with coverage, a check that `src/emoji-data.js` is up to date, and a build.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Project layout:
+
+```
+src/
+  manifest.json, background.html, _locales/en/messages.json
+  background/   main.js, marker-store.js, tst-client.js, menus.js, notifier.js, recent-store.js
+  lib/          pure logic: palette, css, validate, tree, queue, recent, throttle, migration
+  picker/       emoji picker page
+  emoji-data.js generated by scripts/gen_emoji_data.mjs (npm run gen:emoji)
+tests/          Vitest (unit, background with browser mock, picker with happy-dom, static)
+specs/          SpecKit spec, plan, tasks
+```
+
+### Build from source (reproducible)
 
 ```sh
-make build-unsigned   # build only, never publish
-make publish-amo      # publish only, always requires credentials
+npm ci
+npm run gen:emoji   # regenerates src/emoji-data.js from emojibase-data (no diff expected)
+npm run build       # dist/tree_tab_picasso-<version>.zip
 ```
 
-Output is written to `dist/`.
-
-## 🧪 Release Publish
-
-Use `make publish` to start a release PR. AMO publish happens only after that PR is merged to `main`.
-
-ASCII flow:
-
-```
-make publish
-   |
-   +--> checkout main + pull --ff-only
-   |
-   +--> bump-version (manifest/package)
-   |
-   +--> create branch user/release-vX.Y.Z
-   |
-   +--> push + open PR to main
-   |
-   `--> (on PR merge) GitHub Action publishes to AMO
-```
-
-What it does:
-
-1. verifies a clean working tree
-2. syncs local `main`
-3. bumps extension version in `src/manifest.json` and `package.json`
-4. creates and pushes `user/release-vX.Y.Z` branch
-5. opens a release PR to `main`
-
-Examples:
+## 🚢 Release
 
 ```sh
-make publish                    # default: patch bump (x.y.z -> x.y.z+1)
+make publish                    # patch bump (x.y.z -> x.y.z+1)
 make publish VERSION_BUMP=minor # x.y.z -> x.(y+1).0
-make publish VERSION_BUMP=major # x.y.z -> (x+1).0.0
 ```
 
-For local/manual publish fallback (without Actions), use:
+`make publish` bumps the version in `src/manifest.json` and `package.json`, pushes
+`<user>/release-vX.Y.Z`, and opens a PR. Add the `CHANGELOG.md` entry for that version to the
+PR. When the PR is merged, `.github/workflows/release-publish-amo.yml`:
 
-```sh
-make publish-local
-```
+1. runs the full CI workflow on the merged commit,
+2. builds the package, a source archive, and AMO metadata
+   (`amo-metadata-listed.json` + `AMO_REVIEWER_NOTES.md` + changelog notes),
+3. submits to AMO on the **listed** channel with the source archive,
+4. creates the GitHub Release `vX.Y.Z` with the signed `.xpi`.
 
-GitHub Actions release workflow behavior:
+Repository setup: environment `release` with secrets `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`.
+Nobody publishes from a laptop.
 
-- Trigger: PR closed event.
-- Publish condition:
-  - PR was merged
-  - base branch is `main`
-  - head branch contains `/release-v`
-- Any other PR close prints:
-  - `Thank you for your cooperation, bye.`
+## 📄 License
 
-Required GitHub environment setup:
-
-1. Enable Actions in repo settings.
-2. Create environment `release`.
-3. Add secrets:
-   - `AMO_JWT_ISSUER`
-   - `AMO_JWT_SECRET`
-4. Optional environment variable:
-   - `AMO_CHANNEL` (`listed` or `unlisted`, default `listed`)
-
-## ▶️ Run (with web-ext)
-
-Foreground:
-
-```sh
-make deps
-make run
-```
-
-Background:
-
-```sh
-make deps
-make start
-make stop
-```
+[MPL-2.0](LICENSE)

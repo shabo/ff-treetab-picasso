@@ -13,7 +13,7 @@
     "start": "NO_UPDATE_NOTIFIER=1 web-ext run -s src",
     "build": "NO_UPDATE_NOTIFIER=1 web-ext build -s src -a dist --overwrite-dest",
     "lint": "eslint . && prettier --check .",
-    "lint:ext": "NO_UPDATE_NOTIFIER=1 web-ext lint -s src --warnings-as-errors",
+    "lint:ext": "node scripts/lint_ext.mjs",
     "format": "prettier --write .",
     "test": "vitest run --coverage"
   },

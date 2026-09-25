@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title data-i18n="pickerTitle"></title>
+    <link rel="stylesheet" href="picker.css" />
+  </head>
+  <body>
+    <header>
+      <label for="q" class="visually-hidden" data-i18n="pickerSearchLabel"></label>
+      <input
+        id="q"
+        type="search"
+        autocomplete="off"
+        data-i18n-placeholder="pickerSearchPlaceholder"
+      />
+      <button
+        id="clear"
+        type="button"
+        data-i18n="pickerClear"
+        data-i18n-aria-label="pickerClearLabel"
+      ></button>
+    </header>
+
+    <nav>
+      <div
+        id="groups"
+        role="tablist"
+        data-i18n-aria-label="pickerGroups"
+        aria-orientation="vertical"
+      ></div>
+    </nav>
+
+    <main>
+      <p id="meta" aria-live="polite"></p>
+      <p id="error" role="alert" hidden></p>
+      <div id="grid" role="grid" data-i18n-aria-label="pickerGridLabel"></div>
+    </main>
+
+    <script type="module" src="picker.js"></script>
+  </body>
+</html>

@@ -162,7 +162,7 @@ IDs map to test names (`it('[TM-xxx] …')`) so CI output traces back here.
 
 | ID | Check | Expected |
 |----|-------|----------|
-| TM-140 | `web-ext lint` | 0 errors, 0 warnings |
+| TM-140 | `web-ext lint` (`scripts/lint_ext.mjs`) | 0 errors; 0 warnings except the allow-listed `KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION` (desktop-only add-on) |
 | TM-141 | ESLint + Prettier check | 0 errors |
 | TM-142 | regenerate `emoji-data.js` | no git diff |
 | TM-143 | every `__MSG_*__` and `getMessage` key exists in `en/messages.json` | pass |
