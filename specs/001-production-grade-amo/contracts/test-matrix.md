@@ -171,3 +171,16 @@ IDs map to test names (`it('[TM-xxx] …')`) so CI output traces back here.
 | TM-143 | every `__MSG_*__` and `getMessage` key exists in `en/messages.json` | pass |
 | TM-144 | manifest permissions ⊆ used APIs; no `tabs` permission | pass |
 | TM-145 | coverage of `src/lib/**` | ≥ 90 % lines |
+
+## AMO admin tooling (`scripts/lib/amo-api.js`)
+
+| ID | Input | Expected |
+|----|-------|----------|
+| TM-150 | `createAmoJwt('user:1:2','secret',{now:1e6,jti:'abc'})` | HS256 header; iat 1000, exp 1060; valid HMAC |
+| TM-151 | two tokens, no jti | different jti |
+| TM-152 | empty/undefined issuer or secret | throws `credentials` |
+| TM-153 | `['status']` | `{action:'status', version:null}` |
+| TM-154 | `disable-version` with `0.2.0` / none / `0.2` / `0.2.0; rm` | ok / throws `version` ×3 |
+| TM-155 | unknown or empty action | throws `action` |
+| TM-156 | versions list | one line per version, disabled flag appended |
+| TM-157 | no `file` / undefined list | `unknown` status / `[]` |

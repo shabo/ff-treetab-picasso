@@ -1,0 +1,57 @@
+name: AMO Admin
+
+# Manual AMO checks and actions: review status of all versions, or disable one version
+# (e.g. a listed version that must not be published).
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'What to do'
+        type: choice
+        options:
+          - status
+          - disable-version
+        default: status
+      version:
+        description: 'Version for disable-version (e.g. 0.2.0)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: amo-admin
+  cancel-in-progress: false
+
+jobs:
+  amo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: release
+    env:
+      NO_UPDATE_NOTIFIER: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+
+      - name: Run AMO action
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+          ACTION: ${{ inputs.action }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$ACTION" = "status" ]; then
+            node scripts/amo_admin.mjs status
+          else
+            node scripts/amo_admin.mjs "$ACTION" "$VERSION"
+          fi
