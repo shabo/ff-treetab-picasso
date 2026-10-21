@@ -19,14 +19,14 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@vitest/coverage-v8": "^5.0.2",
-    "emojibase-data": "^17.0.0",
-    "eslint": "^10.11.0",
+    "@vitest/coverage-v8": "^5.0.5",
+    "emojibase-data": "^18.0.0",
+    "eslint": "^10.13.0",
     "eslint-config-prettier": "^10.1.8",
-    "globals": "^17.12.0",
-    "happy-dom": "^20.14.5",
-    "prettier": "^3.9.9",
+    "globals": "^17.13.0",
+    "happy-dom": "^21.0.3",
+    "prettier": "^3.9.10",
     "vitest": "^5.0.2",
-    "web-ext": "^10.7.0"
+    "web-ext": "^10.8.0"
   }
 }
