@@ -1,0 +1,40 @@
+# Manual AMO actions: show the review status of all versions, or disable one
+# version (for example a listed version that must not be published).
+#
+# This workflow replaces the GitHub Actions workflow amo-admin.yml.
+# Manual run only: set AMO_TASK=status, or set AMO_TASK=disable-version with
+# AMO_VERSION=<x.y.z>.
+#
+# All tasks run on branch main only, because the AMO secrets can write.
+# Use status (read-only) as the dry run of the AMO secrets.
+#
+# Secrets: amo_jwt_issuer, amo_jwt_secret.
+
+labels:
+  platform: linux/amd64
+
+when:
+  - event: manual
+    branch: main
+    evaluate: 'AMO_TASK == "status" || AMO_TASK == "disable-version"'
+
+steps:
+  - name: amo
+    image: node:24.22.3-bookworm@sha256:9d266751ca3d7fdbe651c878ffd5ad0a42fed49a18c283509267c97f025b7496
+    environment:
+      NO_UPDATE_NOTIFIER: '1'
+      WEB_EXT_API_KEY:
+        from_secret: amo_jwt_issuer
+      WEB_EXT_API_SECRET:
+        from_secret: amo_jwt_secret
+    commands:
+      - |
+        if [ "$${CI_COMMIT_BRANCH:-}" != "main" ]; then
+          echo "ERROR: AMO tasks run on branch main only." >&2
+          exit 1
+        fi
+        if [ "$$AMO_TASK" = "status" ]; then
+          node scripts/amo_admin.mjs status
+        else
+          node scripts/amo_admin.mjs "$$AMO_TASK" "$${AMO_VERSION:-}"
+        fi
