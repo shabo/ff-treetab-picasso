@@ -1,0 +1,135 @@
+# Publish a new version to AMO (listed channel) and create the GitHub Release.
+#
+# This workflow replaces the GitHub Actions workflow release-publish-amo.yml.
+# GitHub started the old workflow on a merged release pull request. This
+# workflow runs on each push to main, and on a manual run with
+# AMO_TASK=publish. It publishes only when the tag v<manifest version> does
+# not exist. If the tag exists, the workflow stops with success because there
+# is no new version.
+#
+# The workflow has three steps:
+#   prepare  Install the dependencies. Build the package. Make the source
+#            archive and the AMO metadata. This step has no secret.
+#   sign     Sign the package on AMO. This step has the AMO secrets only.
+#   release  Create the GitHub Release. This step has the GitHub token only.
+# The split keeps each secret in one step. The step that runs npm ci and the
+# step that runs the build never see a secret.
+#
+# The workflow writes to AMO and to GitHub on branch main only.
+#
+# Secrets:
+#   amo_jwt_issuer            AMO JWT issuer
+#   amo_jwt_secret            AMO JWT secret
+#   ff_treetab_release_token  GitHub token with contents write
+#
+# The workflow never runs on a pull_request event.
+
+labels:
+  platform: linux/amd64
+
+when:
+  - event: push
+    branch: main
+  - event: manual
+    branch: main
+    evaluate: 'AMO_TASK == "publish"'
+
+depends_on: [ci]
+
+steps:
+  - name: prepare
+    image: node:24.22.3-bookworm@sha256:9d266751ca3d7fdbe651c878ffd5ad0a42fed49a18c283509267c97f025b7496
+    environment:
+      NO_UPDATE_NOTIFIER: '1'
+    commands:
+      - npm ci
+      - |
+        bash -euo pipefail <<'SH'
+        version="$$(node -p "JSON.parse(require('fs').readFileSync('src/manifest.json','utf8')).version")"
+        if git ls-remote --exit-code --tags https://github.com/shabo/ff-treetab-picasso.git "refs/tags/v$${version}" >/dev/null; then
+          echo "Tag v$${version} exists. No new version. Stop."
+          touch .skip-publish
+          exit 0
+        fi
+        npm run build
+        git archive --format=zip -o dist/source.zip HEAD
+        node scripts/amo_metadata.mjs dist/amo-metadata.json
+        printf '%s\n' "$$version" > .publish-version
+        SH
+
+  - name: sign
+    image: node:24.22.3-bookworm@sha256:9d266751ca3d7fdbe651c878ffd5ad0a42fed49a18c283509267c97f025b7496
+    environment:
+      NO_UPDATE_NOTIFIER: '1'
+      WEB_EXT_API_KEY:
+        from_secret: amo_jwt_issuer
+      WEB_EXT_API_SECRET:
+        from_secret: amo_jwt_secret
+    commands:
+      - |
+        bash -euo pipefail <<'SH'
+        if [ -f .skip-publish ]; then
+          echo "No new version. Skip."
+          exit 0
+        fi
+        if [ "$${CI_COMMIT_BRANCH:-}" != "main" ]; then
+          echo "ERROR: This step runs on branch main only." >&2
+          exit 1
+        fi
+        set +e
+        npx web-ext sign \
+          --source-dir src \
+          --artifacts-dir dist \
+          --channel listed \
+          --amo-metadata dist/amo-metadata.json \
+          --upload-source-code dist/source.zip \
+          --approval-timeout 900000 2>&1 | tee dist/sign.log
+        status="$${PIPESTATUS[0]}"
+        set -e
+        if [ "$$status" -ne 0 ]; then
+          # A timeout means the version was submitted but is not signed yet.
+          if grep -qiE 'approval.*time ?out|timeout.*approval' dist/sign.log; then
+            echo "WARNING: Submitted to AMO. The signed package is not ready before the approval timeout." >&2
+          else
+            echo "ERROR: web-ext sign failed (exit $$status)." >&2
+            exit "$$status"
+          fi
+        fi
+        SH
+
+  - name: release
+    image: node:24.22.3-bookworm@sha256:9d266751ca3d7fdbe651c878ffd5ad0a42fed49a18c283509267c97f025b7496
+    environment:
+      NO_UPDATE_NOTIFIER: '1'
+      GH_TOKEN:
+        from_secret: ff_treetab_release_token
+    commands:
+      - apt-get update -qq && apt-get install -y -qq --no-install-recommends gh >/dev/null
+      - |
+        bash -euo pipefail <<'SH'
+        if [ -f .skip-publish ]; then
+          echo "No new version. Skip."
+          exit 0
+        fi
+        if [ "$${CI_COMMIT_BRANCH:-}" != "main" ]; then
+          echo "ERROR: This step runs on branch main only." >&2
+          exit 1
+        fi
+        version="$$(cat .publish-version)"
+        shopt -s nullglob
+        xpis=(dist/*.xpi)
+        notes="$$(node -e "const m=JSON.parse(require('fs').readFileSync('dist/amo-metadata.json','utf8'));process.stdout.write(m.version.release_notes['en-US'])")"
+        if [ "$${#xpis[@]}" -gt 0 ]; then
+          files=("$${xpis[@]}")
+        else
+          files=(dist/tree_tab_picasso-*.zip)
+          notes="$${notes}
+
+        > The signed package was not ready within the timeout. Install from AMO once review finishes."
+        fi
+        gh release create "v$${version}" "$${files[@]}" \
+          --repo shabo/ff-treetab-picasso \
+          --target "$$CI_COMMIT_SHA" \
+          --title "v$${version}" \
+          --notes "$$notes"
+        SH
