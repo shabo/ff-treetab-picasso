@@ -1,0 +1,31 @@
+# CI checks for the extension.
+# This workflow replaces the GitHub Actions workflow ci.yml. It runs the same
+# checks. Woodpecker has no artifact upload. The build step therefore checks
+# that dist/*.zip exists.
+#
+# A manual run needs AMO_TASK=publish or AMO_TASK=sign-unlisted.
+
+labels:
+  platform: linux/amd64
+
+when:
+  - event: pull_request
+  - event: push
+    branch: main
+  - event: manual
+    evaluate: 'AMO_TASK == "publish" || AMO_TASK == "sign-unlisted"'
+
+steps:
+  - name: check
+    image: node:24.22.3-bookworm@sha256:9d266751ca3d7fdbe651c878ffd5ad0a42fed49a18c283509267c97f025b7496
+    environment:
+      NO_UPDATE_NOTIFIER: '1'
+    commands:
+      - npm ci
+      - npm run lint
+      - npm run lint:ext
+      - npm test
+      - npm run gen:emoji
+      - git diff --exit-code -- src/emoji-data.js
+      - npm run build
+      - ls dist/*.zip
