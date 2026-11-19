@@ -5,8 +5,8 @@
 # Manual run only: set AMO_TASK=status, or set AMO_TASK=disable-version with
 # AMO_VERSION=<x.y.z>.
 #
-# status is read-only. It can run on any branch. Use it to make a dry run of
-# the AMO secrets. disable-version runs on branch main only.
+# All tasks run on branch main only, because the AMO secrets can write.
+# Use status (read-only) as the dry run of the AMO secrets.
 #
 # Secrets: amo_jwt_issuer, amo_jwt_secret.
 
@@ -15,10 +15,8 @@ labels:
 
 when:
   - event: manual
-    evaluate: 'AMO_TASK == "status"'
-  - event: manual
     branch: main
-    evaluate: 'AMO_TASK == "disable-version"'
+    evaluate: 'AMO_TASK == "status" || AMO_TASK == "disable-version"'
 
 steps:
   - name: amo
@@ -31,12 +29,12 @@ steps:
         from_secret: amo_jwt_secret
     commands:
       - |
+        if [ "$${CI_COMMIT_BRANCH:-}" != "main" ]; then
+          echo "ERROR: AMO tasks run on branch main only." >&2
+          exit 1
+        fi
         if [ "$$AMO_TASK" = "status" ]; then
           node scripts/amo_admin.mjs status
         else
-          if [ "$${CI_COMMIT_BRANCH:-}" != "main" ]; then
-            echo "ERROR: disable-version runs on branch main only." >&2
-            exit 1
-          fi
           node scripts/amo_admin.mjs "$$AMO_TASK" "$${AMO_VERSION:-}"
         fi
